@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rx Reconcile - Inventory Audit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5e1fff",
+                        "background-light": "#f6f5f8",
+                        "background-dark": "#150f23",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2a2438",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-display text-slate-900 dark:text-slate-100 transition-colors duration-200">
+<!-- Header -->
+<header class="w-full border-b border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark px-6 py-4 lg:px-10">
+<div class="mx-auto flex max-w-7xl items-center justify-between">
+<div class="flex items-center gap-3 text-primary">
+<div class="flex items-center justify-center size-10 bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-3xl">medication_liquid</span>
+</div>
+<h1 class="text-xl lg:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Rx Reconcile</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden sm:flex text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Help Guide</button>
+<div class="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden md:block">
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Dr. Sarah Chen</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Head Pharmacist</p>
+</div>
+<div class="size-10 rounded-full bg-cover bg-center border-2 border-white dark:border-slate-700 shadow-sm" data-alt="Portrait of a female pharmacist" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDG5D5sJc8Vk35SaFlEsbvHdgKiKZLPZQ774XbPFanP6f4uEkw4lnxwjmQZxQVq6Txj_-OZ5tlboIpgbq3CjqGrZUFcGh-k9fhL-W-ZoH9ORH4f5NWQGlqA4UI6XTBScQ8hJk8hKawOTWAyQWEcK1hjMp_gLd1iEwQ30SZDmclpKA2PTU_yZxvtetHyZ4A6s_U0kHTUJYexTf-hGOiIi8RVEa2R57VsV9D8nW9u3S3gSgDjon28xO90j8noP8AhKFPrctJVvaTJEPs");'></div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 flex flex-col">
+<!-- Page Heading -->
+<div class="text-center max-w-3xl mx-auto mb-12 animate-fade-in-up">
+<h2 class="text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white mb-4">
+                Audit your inventory
+            </h2>
+<p class="text-lg text-slate-600 dark:text-slate-300">
+                Upload your wholesaler reports and point-of-sale data to identify discrepancies instantly.
+            </p>
+</div>
+<!-- Upload Section -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10 mb-12">
+<!-- Ordered Report Card -->
+<div class="group relative flex flex-col bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 overflow-hidden">
+<div class="absolute inset-x-0 top-0 h-1 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+<div class="p-8 flex flex-col items-center flex-1">
+<div class="mb-6 p-4 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-4xl">inventory_2</span>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Ordered Report</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 text-center mb-8">
+                        Upload wholesaler invoice (CSV, PDF)
+                    </p>
+<div class="w-full mt-auto">
+<label class="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-primary transition-all" for="upload-ordered">
+<div class="flex flex-col items-center justify-center pt-5 pb-6">
+<span class="material-symbols-outlined text-slate-400 mb-2">cloud_upload</span>
+<p class="text-sm text-slate-500 dark:text-slate-400"><span class="font-semibold text-primary">Click to upload</span> or drag and drop</p>
+</div>
+<input class="hidden" id="upload-ordered" type="file"/>
+</label>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+<span>Supported formats: CSV, PDF</span>
+<span class="material-symbols-outlined text-base opacity-50">info</span>
+</div>
+</div>
+<!-- Sold Report Card -->
+<div class="group relative flex flex-col bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 overflow-hidden">
+<div class="absolute inset-x-0 top-0 h-1 bg-teal-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+<div class="p-8 flex flex-col items-center flex-1">
+<div class="mb-6 p-4 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500/20 transition-colors">
+<span class="material-symbols-outlined text-4xl">point_of_sale</span>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Sold Report</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 text-center mb-8">
+                        Upload dispensing log (CSV, XLS)
+                    </p>
+<div class="w-full mt-auto">
+<label class="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-teal-500 transition-all" for="upload-sold">
+<div class="flex flex-col items-center justify-center pt-5 pb-6">
+<span class="material-symbols-outlined text-slate-400 mb-2">cloud_upload</span>
+<p class="text-sm text-slate-500 dark:text-slate-400"><span class="font-semibold text-teal-600 dark:text-teal-400">Click to upload</span> or drag and drop</p>
+</div>
+<input class="hidden" id="upload-sold" type="file"/>
+</label>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+<span>Supported formats: CSV, XLS</span>
+<span class="material-symbols-outlined text-base opacity-50">info</span>
+</div>
+</div>
+</div>
+<!-- Action Section -->
+<div class="flex flex-col items-center justify-center gap-6">
+<button class="group flex items-center justify-center gap-2 w-full sm:w-auto min-w-[240px] h-14 px-8 bg-primary hover:bg-primary/90 text-white text-lg font-bold rounded-lg shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]">
+<span class="material-symbols-outlined">analytics</span>
+<span>Run Comparison</span>
+</button>
+<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary underline decoration-slate-300 dark:decoration-slate-600 underline-offset-4 transition-colors" href="#">
+                Download sample template files
+            </a>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full border-t border-slate-200 dark:border-slate-800 py-6 text-center">
+<p class="text-xs text-slate-400 dark:text-slate-500">
+            © 2024 Rx Reconcile. All rights reserved. Secure &amp; Private.
+        </p>
+</footer>
+</body></html>

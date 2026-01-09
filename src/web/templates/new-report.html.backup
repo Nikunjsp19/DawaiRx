@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start New Report - DawaiRx</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-light: #dbeafe;
+            --primary-lighter: #eff6ff;
+            --primary-dark: #1e40af;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --blue-50: #eff6ff;
+            --blue-100: #dbeafe;
+            --blue-200: #bfdbfe;
+            --blue-300: #93c5fd;
+            --blue-400: #60a5fa;
+            --blue-500: #3b82f6;
+            --blue-600: #2563eb;
+            --blue-700: #1d4ed8;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --white: #ffffff;
+            --shadow-xs: 0 1px 2px 0 rgba(59, 130, 246, 0.05);
+            --shadow-sm: 0 1px 3px 0 rgba(59, 130, 246, 0.1), 0 1px 2px 0 rgba(59, 130, 246, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(59, 130, 246, 0.1), 0 2px 4px -1px rgba(59, 130, 246, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05);
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 48px;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #ffffff 100%);
+            min-height: 100vh;
+            padding: 0;
+            color: var(--gray-900);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            width: 100%;
+            padding: var(--spacing-xl) var(--spacing-lg);
+        }
+        
+        .header {
+            background: var(--white);
+            border-radius: 12px;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--blue-200);
+            background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+            width: 100%;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .header h1 i {
+            color: var(--primary);
+            -webkit-text-fill-color: var(--primary);
+        }
+        
+        .nav {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .nav-link {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: transparent;
+            color: var(--gray-600);
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background: var(--blue-50);
+            color: var(--gray-900);
+        }
+        
+        .nav-link i {
+            margin-right: var(--spacing-xs);
+        }
+        
+        .main-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: var(--spacing-2xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--blue-200);
+            background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+            width: 100%;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-xl);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .section-title i {
+            color: var(--primary);
+        }
+        
+        .upload-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .upload-card {
+            border: 2px dashed var(--blue-300);
+            border-radius: 12px;
+            padding: var(--spacing-xl);
+            text-align: center;
+            transition: all 0.2s ease;
+            background: var(--blue-50);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .upload-card:hover {
+            border-color: var(--primary);
+            background: var(--white);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        
+        .upload-card:hover::before {
+            opacity: 1;
+        }
+        
+        .upload-card.has-file {
+            border-color: var(--success);
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+        
+        .upload-card.has-file::before {
+            opacity: 1;
+            background: linear-gradient(90deg, var(--success) 0%, #059669 100%);
+        }
+        
+        .upload-card label {
+            cursor: pointer;
+            display: block;
+        }
+        
+        .upload-card h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .upload-card h4 i {
+            font-size: 24px;
+            color: var(--primary);
+        }
+        
+        .upload-card p {
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .upload-card input[type="file"] {
+            display: none;
+        }
+        
+        .file-name {
+            display: block;
+            font-size: 13px;
+            color: var(--gray-600);
+            margin-top: var(--spacing-sm);
+        }
+        
+        .btn {
+            padding: 14px var(--spacing-lg);
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            width: auto;
+            min-width: 200px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-dark) 100%);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: var(--spacing-md);
+            border-radius: 6px;
+            margin-bottom: var(--spacing-lg);
+            display: none;
+            font-size: 14px;
+        }
+        
+        .status.info {
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .status.success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .status.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .results {
+            display: none;
+            margin-top: var(--spacing-2xl);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--blue-50) 0%, var(--white) 100%);
+            padding: var(--spacing-md);
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--blue-200);
+            box-shadow: var(--shadow-xs);
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .stat-card h4 {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--gray-600);
+            margin-bottom: var(--spacing-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            max-height: 70vh;
+            overflow-y: auto;
+            border: 1px solid var(--blue-200);
+            border-radius: 12px;
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .data-table {
+            width: 100%;
+            font-size: 13px;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+        
+        .data-table th:first-child,
+        .data-table td:first-child {
+            padding-left: var(--spacing-lg);
+        }
+        
+        .data-table th:last-child,
+        .data-table td:last-child {
+            padding-right: var(--spacing-lg);
+        }
+        
+        .data-table thead {
+            background: linear-gradient(135deg, var(--blue-50) 0%, var(--blue-100) 100%);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .data-table th {
+            padding: var(--spacing-md);
+            text-align: left;
+            border-bottom: 2px solid var(--blue-200);
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--gray-700);
+        }
+        
+        .data-table td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--blue-100);
+        }
+        
+        .data-table tbody tr:hover {
+            background: var(--blue-50);
+        }
+        
+        .download-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+        
+        .download-link {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--blue-50);
+            color: var(--gray-700);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 1px solid var(--blue-200);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .download-link:hover {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .download-link i {
+            font-size: 14px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 0.6s linear infinite;
+            margin-right: var(--spacing-sm);
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+            
+            .upload-cards-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (min-width: 1400px) {
+            .container {
+                padding: var(--spacing-xl) var(--spacing-2xl);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1><i class="fas fa-file-medical"></i> Start New Report</h1>
+            </div>
+            <div class="nav">
+                <a href="/" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/settings" class="nav-link"><i class="fas fa-user-cog"></i> Profile Settings</a>
+                <a href="#" id="logoutLink" class="nav-link"><i class="fas fa-sign-out-alt"></i> Sign Out</a>
+            </div>
+        </div>
+        
+        <div class="main-card">
+            <h2 class="section-title"><i class="fas fa-cloud-upload-alt"></i> Upload Files</h2>
+            
+            <form id="uploadForm">
+                <div class="upload-cards-container">
+                    <div class="upload-card" id="soldCard">
+                        <label for="soldFile">
+                            <h4><i class="fas fa-file-invoice-dollar"></i> Inventory Report</h4>
+                            <p>Select your pharmacy's inventory report (CSV/XLSX)</p>
+                            <input type="file" id="soldFile" name="sold_file" accept=".csv,.xlsx,.xls" required>
+                            <span class="file-name" id="soldFileName">No file chosen</span>
+                        </label>
+                    </div>
+                    
+                    <div class="upload-card" id="orderedCard">
+                        <label for="orderedFiles">
+                            <h4><i class="fas fa-truck-loading"></i> Supplier Reports</h4>
+                            <p>Select one or more supplier ordered reports (CSV/XLSX)</p>
+                            <input type="file" id="orderedFiles" name="ordered_files" accept=".csv,.xlsx,.xls" multiple required>
+                            <span class="file-name" id="orderedFileName">No files chosen</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: center; margin-top: var(--spacing-xl);">
+                    <button type="submit" id="runButton" class="btn">
+                        <i class="fas fa-play-circle"></i>
+                        <span id="buttonText">Run Reconciliation</span>
+                        <span id="buttonSpinner" class="spinner" style="display: none;"></span>
+                    </button>
+                </div>
+            </form>
+            
+            <div class="status" id="status"></div>
+            
+            <div class="results" id="results">
+                <h2 class="section-title"><i class="fas fa-chart-bar"></i> Reconciliation Results</h2>
+                <div class="stats" id="stats"></div>
+                <div id="dataTables"></div>
+                <div class="download-links" id="downloadLinks"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Authentication helper
+        function getAuthToken() {
+            return localStorage.getItem('auth_token');
+        }
+        
+        function getAuthHeaders() {
+            const token = getAuthToken();
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
+        
+        function checkAuth() {
+            const token = getAuthToken();
+            if (!token) {
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+        
+        if (!checkAuth()) {
+            // Redirect will happen
+        }
+        
+        // Logout handler
+        const logoutLink = document.getElementById('logoutLink');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_id');
+                window.location.href = '/login';
+            });
+        }
+        
+        // File input handlers
+        const orderedCard = document.getElementById('orderedCard');
+        const soldCard = document.getElementById('soldCard');
+        
+        document.getElementById('soldFile').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                document.getElementById('soldFileName').textContent = 'Selected: ' + e.target.files[0].name;
+                soldCard.classList.add('has-file');
+            } else {
+                document.getElementById('soldFileName').textContent = 'No file chosen';
+                soldCard.classList.remove('has-file');
+            }
+        });
+        
+        document.getElementById('orderedFiles').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                document.getElementById('orderedFileName').textContent = `Selected: ${e.target.files.length} files`;
+                orderedCard.classList.add('has-file');
+            } else {
+                document.getElementById('orderedFileName').textContent = 'No files chosen';
+                orderedCard.classList.remove('has-file');
+            }
+        });
+        
+        // Form submission
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            
+            // Append all ordered files (suppliers)
+            const orderedFiles = document.getElementById('orderedFiles').files;
+            if (orderedFiles.length === 0) {
+                alert('Please select at least one supplier file');
+                return;
+            }
+            for (let i = 0; i < orderedFiles.length; i++) {
+                formData.append('ordered_files', orderedFiles[i]);
+            }
+            
+            // Append single inventory report (sold file)
+            const soldFile = document.getElementById('soldFile').files[0];
+            if (!soldFile) {
+                alert('Please select an inventory report file');
+                return;
+            }
+            formData.append('sold_file', soldFile);
+            
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            const runButton = document.getElementById('runButton');
+            const buttonText = document.getElementById('buttonText');
+            const buttonSpinner = document.getElementById('buttonSpinner');
+            
+            runButton.disabled = true;
+            buttonText.textContent = 'Processing...';
+            buttonSpinner.style.display = 'inline-block';
+            statusDiv.className = 'status info';
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = '📤 Uploading and validating files...';
+            resultsDiv.style.display = 'none';
+            
+            try {
+                // Upload files
+                const uploadResponse = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+                
+                if (!uploadResponse.ok) {
+                    const errorData = await uploadResponse.json();
+                    throw new Error(errorData.detail || 'Upload failed');
+                }
+                
+                const uploadData = await uploadResponse.json();
+                
+                if (!uploadData.success) {
+                    throw new Error('Validation failed. Please check your files.');
+                }
+                
+                const sessionId = uploadData.session_id;
+                statusDiv.textContent = '✅ Files validated. Running reconciliation...';
+                
+                // Run comparison
+                const runFormData = new FormData();
+                runFormData.append('session_id', sessionId);
+                
+                const runResponse = await fetch('/api/run', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: runFormData
+                });
+                
+                if (!runResponse.ok) {
+                    throw new Error('Reconciliation failed');
+                }
+                
+                const runData = await runResponse.json();
+                
+                if (!runData.success) {
+                    throw new Error('Reconciliation failed.');
+                }
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Reconciliation complete!';
+                
+                displayResults(runData);
+                
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Error: ' + error.message;
+            } finally {
+                runButton.disabled = false;
+                buttonText.textContent = 'Run Reconciliation';
+                buttonSpinner.style.display = 'none';
+            }
+        });
+        
+        function displayResults(data) {
+            const summary = data.summary;
+            const runId = data.run_id;
+            
+            // Display stats
+            const statsDiv = document.getElementById('stats');
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <h4>Total Medicines</h4>
+                    <div class="value">${summary.total_medicines}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Ordered</h4>
+                    <div class="value">${summary.total_ordered.toLocaleString()}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Sold</h4>
+                    <div class="value">${summary.total_sold.toLocaleString()}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Remaining</h4>
+                    <div class="value">${summary.total_remaining.toLocaleString()}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Shortages</h4>
+                    <div class="value">${summary.medicines_with_shortage}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Issues Found</h4>
+                    <div class="value">${summary.total_issues}</div>
+                </div>
+            `;
+            
+            // Display BatchRx report table
+            const dataTablesDiv = document.getElementById('dataTables');
+            let tablesHTML = '';
+            
+            if (data.batchrx_report && data.batchrx_report.length > 0) {
+                const rowCount = data.batchrx_row_count || data.batchrx_report.length;
+                const columns = data.batchrx_columns || Object.keys(data.batchrx_report[0]);
+                
+                tablesHTML += `<h3 style="font-size: 18px; font-weight: 600; margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: var(--spacing-sm);"><i class="fas fa-table" style="color: var(--primary);"></i> Inventory Report</h3>`;
+                tablesHTML += `<p style="color: var(--gray-500); margin-bottom: var(--spacing-lg); font-size: 14px;">${rowCount} medicines</p>`;
+                tablesHTML += '<div class="table-container">';
+                tablesHTML += '<table class="data-table">';
+                
+                // Header row
+                tablesHTML += '<thead><tr>';
+                columns.forEach(col => {
+                    const displayCol = col.replace(/\\n/g, '<br>');
+                    tablesHTML += `<th>${displayCol}</th>`;
+                });
+                tablesHTML += '</tr></thead><tbody>';
+                
+                // Data rows
+                data.batchrx_report.forEach((row, idx) => {
+                    tablesHTML += `<tr>`;
+                    columns.forEach(col => {
+                        let value = row[col] !== undefined && row[col] !== null ? row[col] : '';
+                        const colName = col.replace(/\\n/g, ' ');
+                        
+                        if (typeof value === 'number') {
+                            if (colName.includes('SHORTAGE') && value < 0) {
+                                value = `<span style="color: var(--danger); font-weight: 500;">${value.toLocaleString()}</span>`;
+                            } else if (colName.includes('AMOUNT') || colName.includes('COST')) {
+                                value = `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                            } else {
+                                value = value.toLocaleString();
+                            }
+                        }
+                        tablesHTML += `<td>${value}</td>`;
+                    });
+                    tablesHTML += '</tr>';
+                });
+                
+                tablesHTML += '</tbody></table></div>';
+                
+                if (rowCount > data.batchrx_report.length) {
+                    tablesHTML += `<p style="color: var(--gray-500); margin-top: var(--spacing-lg); text-align: center; font-size: 13px;">Showing first ${data.batchrx_report.length} of ${rowCount} medicines. <a href="/api/download/${runId}/inventory_report" style="color: var(--primary); text-decoration: none; font-weight: 500;">Download full CSV</a></p>`;
+                }
+            }
+            
+            dataTablesDiv.innerHTML = tablesHTML;
+            
+            // Display download links
+            const downloadLinksDiv = document.getElementById('downloadLinks');
+            downloadLinksDiv.innerHTML = `
+                <a href="/api/download/${runId}/inventory_report" class="download-link"><i class="fas fa-file-csv"></i> Download Inventory Report (CSV)</a>
+                <a href="/api/download/${runId}/audit_report_detailed" class="download-link"><i class="fas fa-file-pdf"></i> Detailed PDF Report</a>
+                <a href="/api/download/${runId}/audit_report" class="download-link"><i class="fas fa-file-excel"></i> Excel Report</a>
+                <a href="/api/download/${runId}/issues" class="download-link"><i class="fas fa-exclamation-triangle"></i> Issues (CSV)</a>
+                <a href="/api/download/${runId}/summary" class="download-link"><i class="fas fa-file-alt"></i> Summary (JSON)</a>
+            `;
+            
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+</body>
+</html>

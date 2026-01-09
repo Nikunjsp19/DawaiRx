@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Settings - DawaiRx</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2387e5",
+                        "background-light": "#f6f5f8",
+                        "background-dark": "#150f23",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2a2438",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex font-display text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <!-- Left Sidebar Navigation -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-56 bg-surface-light dark:bg-surface-dark border-r border-gray-200/50 dark:border-gray-800/50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <!-- Logo/Brand -->
+        <div class="flex items-center gap-3 px-4 py-4 border-b border-gray-200/50 dark:border-gray-800/50">
+            <div class="flex items-center justify-center size-10 bg-primary/10 rounded-md text-primary">
+                <span class="material-symbols-outlined text-lg">local_pharmacy</span>
+            </div>
+            <h2 class="text-base font-semibold tracking-tight text-slate-900 dark:text-white">DawaiRx</h2>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-3 py-4 space-y-1">
+            <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary transition-colors text-sm">
+                <span class="material-symbols-outlined text-lg">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="/new-report" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary transition-colors text-sm">
+                <span class="material-symbols-outlined text-lg">add_circle</span>
+                <span>New Report</span>
+            </a>
+            <a href="/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium transition-colors text-sm">
+                <span class="material-symbols-outlined text-lg">settings</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <!-- Logout Button -->
+        <div class="px-3 py-3 border-t border-gray-200/50 dark:border-gray-800/50">
+            <button id="logoutLink" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-red-600 dark:hover:text-red-400 transition-colors text-sm">
+                <span class="material-symbols-outlined text-lg">logout</span>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Overlay -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col lg:ml-56 min-w-0">
+        <!-- Mobile Header -->
+        <header class="lg:hidden sticky top-0 z-40 w-full border-b border-gray-200 dark:border-gray-800 bg-surface-light dark:bg-surface-dark px-4 py-3">
+            <div class="flex items-center justify-between">
+                <button onclick="toggleSidebar()" class="flex items-center justify-center size-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
+                    <span class="material-symbols-outlined text-2xl">menu</span>
+                </button>
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center justify-center size-8 bg-primary/10 rounded-lg text-primary">
+                        <span class="material-symbols-outlined">local_pharmacy</span>
+                    </div>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">DawaiRx</h2>
+                </div>
+                <div class="w-10"></div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 py-4 lg:py-6 overflow-auto">
+        <div class="max-w-xl mx-auto">
+            <!-- Page Heading -->
+            <div class="text-center mb-6">
+                <h2 class="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
+                    Profile Settings
+                </h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">
+                    Manage your account information and preferences
+                </p>
+            </div>
+
+            <!-- Settings Card -->
+            <div class="bg-surface-light dark:bg-surface-dark rounded-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
+                <div class="p-6">
+                    <div class="status mb-5 hidden" id="status"></div>
+
+                    <!-- User ID Display -->
+                    <div class="mb-6 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-xl">badge</span>
+                            <div>
+                                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">User ID</p>
+                                <p class="text-lg font-semibold text-slate-900 dark:text-white" id="userId">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Form -->
+                    <form id="settingsForm" class="space-y-5">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                <span class="material-symbols-outlined text-lg align-middle mr-1">email</span>
+                                Email (Optional)
+                            </label>
+                            <input type="email" id="email" name="email"
+                                class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
+                                placeholder="Enter your email">
+                        </div>
+
+                        <div>
+                            <label for="currentPassword" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                <span class="material-symbols-outlined text-lg align-middle mr-1">lock</span>
+                                Current Password
+                            </label>
+                            <input type="password" id="currentPassword" name="currentPassword"
+                                class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
+                                placeholder="Enter current password (required for password changes)">
+                        </div>
+
+                        <div>
+                            <label for="newPassword" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                <span class="material-symbols-outlined text-lg align-middle mr-1">key</span>
+                                New Password (Optional)
+                            </label>
+                            <input type="password" id="newPassword" name="newPassword" minlength="6"
+                                class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
+                                placeholder="Enter new password (min 6 characters)">
+                        </div>
+
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                <span class="material-symbols-outlined text-lg align-middle mr-1">check_circle</span>
+                                Confirm New Password
+                            </label>
+                            <input type="password" id="confirmPassword" name="confirmPassword"
+                                class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
+                                placeholder="Confirm new password">
+                        </div>
+
+                        <button type="submit" id="saveButton"
+                            class="w-full flex items-center justify-center gap-2 h-10 px-4 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-lg shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                            <span class="material-symbols-outlined">save</span>
+                            <span id="buttonText">Save Changes</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full border-t border-slate-200 dark:border-slate-800 py-6 text-center">
+        <p class="text-xs text-slate-400 dark:text-slate-500">
+            © 2024 DawaiRx. All rights reserved. Secure & Private.
+        </p>
+    </footer>
+
+    <script>
+        // Authentication helper
+        function getAuthToken() {
+            return localStorage.getItem('auth_token');
+        }
+        
+        function getAuthHeaders() {
+            const token = getAuthToken();
+            return token ? { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            } : {};
+        }
+        
+        function checkAuth() {
+            const token = getAuthToken();
+            if (!token) {
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+        
+        if (!checkAuth()) {
+            // Redirect will happen
+        }
+        
+        // Logout handler
+        const logoutLink = document.getElementById('logoutLink');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_id');
+                window.location.href = '/login';
+            });
+        }
+        
+        // Add error handler for 401 responses
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const response = await originalFetch(...args);
+            if (response.status === 401) {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_id');
+                window.location.href = '/login';
+            }
+            return response;
+        };
+        
+        // Decode JWT to get user_id
+        function getUserIdFromToken() {
+            const token = getAuthToken();
+            if (!token) return null;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.sub || payload.user_id;
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // Load user ID on page load
+        const userId = getUserIdFromToken();
+        if (userId) {
+            document.getElementById('userId').textContent = userId;
+        }
+        
+        // Form submission
+        const settingsForm = document.getElementById('settingsForm');
+        const saveButton = document.getElementById('saveButton');
+        const buttonText = document.getElementById('buttonText');
+        const statusDiv = document.getElementById('status');
+        
+        settingsForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate password match
+            if (newPassword && newPassword !== confirmPassword) {
+                showStatus('New passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPassword && newPassword.length < 6) {
+                showStatus('New password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            // Build update payload
+            const updateData = {};
+            if (email) updateData.email = email;
+            if (newPassword) {
+                if (!currentPassword) {
+                    showStatus('Current password is required to change password', 'error');
+                    return;
+                }
+                updateData.current_password = currentPassword;
+                updateData.new_password = newPassword;
+            } else if (currentPassword) {
+                // If current password provided but no new password, still require it for email change
+                updateData.current_password = currentPassword;
+            }
+            
+            if (Object.keys(updateData).length === 0) {
+                showStatus('Please enter at least one field to update', 'error');
+                return;
+            }
+            
+            saveButton.disabled = true;
+            buttonText.textContent = 'Saving...';
+            
+            try {
+                const response = await fetch('/api/auth/settings', {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(updateData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showStatus('Settings updated successfully!', 'success');
+                    // Clear password fields
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    const errorMsg = data.detail || (Array.isArray(data.detail) ? data.detail.map(d => d.msg || d).join(', ') : 'Update failed');
+                    showStatus(errorMsg, 'error');
+                }
+            } catch (error) {
+                showStatus('Network error. Please try again.', 'error');
+            } finally {
+                saveButton.disabled = false;
+                buttonText.textContent = 'Save Changes';
+            }
+        });
+        
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.classList.remove('hidden');
+            
+            const colors = {
+                'success': 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-900/30 text-green-800 dark:text-green-300',
+                'error': 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/30 text-red-800 dark:text-red-300',
+                'info': 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/30 text-blue-800 dark:text-blue-300'
+            };
+            
+            statusDiv.className = `status mb-6 p-4 rounded-lg border ${colors[type] || colors.info}`;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Sidebar toggle for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

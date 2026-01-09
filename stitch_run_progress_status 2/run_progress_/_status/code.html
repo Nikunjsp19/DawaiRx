@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PharmaAudit Pro - Run Progress</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5e1fff",
+                        "primary-content": "#ffffff",
+                        "primary-light": "#f0f4ff", 
+                        "background-light": "#f5f3ff", 
+                        "background-dark": "#150f23",
+                        "text-main": "#110c1d",
+                        "text-subtle": "#5f5f6e",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom subtle pulsing animation for the active step indicator */
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main antialiased min-h-screen flex flex-col transition-colors duration-300">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a1625] px-6 lg:px-10 py-3 sticky top-0 z-50 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="flex items-center justify-center text-primary size-8 bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-[20px]">local_pharmacy</span>
+</div>
+<h2 class="text-text-main dark:text-white text-lg font-bold leading-tight tracking-tight">PharmaAudit Pro</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-2 text-sm text-text-subtle dark:text-slate-400">
+<span class="material-symbols-outlined text-[18px]">help</span>
+<span>Help Center</span>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 ring-2 ring-white dark:ring-slate-700 shadow-sm" data-alt="User profile avatar showing a smiling pharmacist" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA1z8De9gjg6AXllc9g7z6Bs7wWpywJvYby7WufuSWF6avkoaK_T_Kb-tKZ9wUJKmBIyHewuiXQByxYryPuNB6Nkzre4DDAdlvEcucs84yR-iyM2sSTezLSRUaDyLCKuoTjOBspCdiX5yRkav4KVrGVUTiqoPJGkgMMJbGCpkY-JsrJhX1BEQOOrMLS18WowjMOiBP0Tey1YU1yA2X6YqrUhxJk9ozB4AADAU4DMlLsW-qADkAG27B8izEw3wZkDQ2LVi17tI9rCnw");'></div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-7xl mx-auto">
+<!-- Central Card Container -->
+<div class="w-full max-w-[640px] bg-white dark:bg-[#1e192b] rounded-2xl shadow-xl shadow-primary/5 border border-slate-100 dark:border-slate-800 overflow-hidden relative">
+<!-- Decorative top accent -->
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/40 via-primary to-primary/40"></div>
+<div class="p-8 md:p-12 flex flex-col items-center text-center">
+<!-- Icon Header -->
+<div class="size-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 animate-pulse-subtle">
+<span class="material-symbols-outlined text-primary text-[32px]">sync</span>
+</div>
+<!-- Text Content -->
+<h1 class="text-slate-900 dark:text-white tracking-tight text-3xl font-bold leading-tight mb-3">
+                    Audit in Progress
+                </h1>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-relaxed max-w-md mx-auto mb-10">
+                    Please wait while we reconcile your pharmacy data against the dispensing logs. Do not close this window.
+                </p>
+<!-- Progress Bar Section -->
+<div class="w-full mb-8">
+<div class="flex justify-between items-end mb-2 px-1">
+<span class="text-sm font-semibold text-primary dark:text-primary-light">Processing batch 2 of 4...</span>
+<span class="text-sm font-medium text-slate-400 dark:text-slate-500">45%</span>
+</div>
+<div class="h-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full relative" style="width: 45%;">
+<!-- Shimmer effect overlay -->
+<div class="absolute top-0 left-0 bottom-0 right-0 bg-gradient-to-r from-transparent via-white/20 to-transparent w-full -translate-x-full animate-[shimmer_2s_infinite]"></div>
+</div>
+</div>
+<div class="flex justify-end mt-2 px-1">
+<span class="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                            Est. time remaining: &lt; 2 mins
+                        </span>
+</div>
+</div>
+<!-- Detailed Timeline / Steps -->
+<div class="w-full bg-slate-50 dark:bg-[#252033] rounded-xl p-6 border border-slate-100 dark:border-slate-700/50 text-left">
+<div class="flex flex-col gap-0">
+<!-- Step 1: Completed -->
+<div class="flex gap-4 relative pb-8 group">
+<!-- Line connecting dots -->
+<div class="absolute left-[11px] top-6 bottom-0 w-[2px] bg-primary/20 group-last:hidden"></div>
+<div class="relative z-10 flex-none text-primary bg-white dark:bg-[#252033] rounded-full">
+<span class="material-symbols-outlined text-[24px]">check_circle</span>
+</div>
+<div class="flex flex-col pt-[2px]">
+<span class="text-slate-900 dark:text-white font-medium text-sm">Uploading Inventory Data</span>
+<span class="text-slate-500 text-xs mt-0.5">Completed successfully</span>
+</div>
+</div>
+<!-- Step 2: Active -->
+<div class="flex gap-4 relative pb-8 group">
+<div class="absolute left-[11px] top-6 bottom-0 w-[2px] bg-slate-200 dark:bg-slate-700 group-last:hidden"></div>
+<div class="relative z-10 flex-none text-primary bg-white dark:bg-[#252033] rounded-full animate-pulse-subtle">
+<span class="material-symbols-outlined text-[24px] filled">radio_button_checked</span>
+</div>
+<div class="flex flex-col pt-[2px]">
+<span class="text-primary font-medium text-sm">Validating Records</span>
+<span class="text-primary/70 text-xs mt-0.5">Scanning for discrepancies...</span>
+</div>
+</div>
+<!-- Step 3: Pending -->
+<div class="flex gap-4 relative group">
+<div class="relative z-10 flex-none text-slate-300 dark:text-slate-600 bg-white dark:bg-[#252033] rounded-full">
+<span class="material-symbols-outlined text-[24px]">radio_button_unchecked</span>
+</div>
+<div class="flex flex-col pt-[2px]">
+<span class="text-slate-400 dark:text-slate-500 font-medium text-sm">Finalizing Report</span>
+<span class="text-slate-400 dark:text-slate-600 text-xs mt-0.5">Pending</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action / Cancel -->
+<div class="mt-10">
+<button class="text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 text-sm font-medium transition-colors flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10">
+<span class="material-symbols-outlined text-[18px]">close</span>
+                        Cancel Run
+                    </button>
+</div>
+</div>
+</div>
+<!-- Bottom note -->
+<div class="mt-8 text-center text-slate-400 dark:text-slate-600 text-xs max-w-lg">
+<p>If you experience any issues, please contact internal support at <a class="underline hover:text-primary" href="#">support@pharmaaudit.pro</a></p>
+</div>
+</main>
+<style>
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</body></html>

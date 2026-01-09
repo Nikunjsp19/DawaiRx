@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.log
+web_server.log
+uploads/
+out/
+*.csv
+*.xlsx
+*.xls
+!sample_data/*.csv
+!sample_data/*.xlsx
+
+# Environment variables
+.env
+.env.local
+
+# MongoDB
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/
+*.tmp

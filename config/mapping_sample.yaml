@@ -1,0 +1,21 @@
+# Sample column mapping configuration
+# Maps original column names to canonical field names
+
+ordered:
+  drug_name: drug_name
+  ndc: ndc
+  strength: strength
+  manufacturer: manufacturer
+  quantity: ordered_qty
+  order_date: claim_date
+
+sold:
+  drug_name: drug_name
+  ndc: ndc
+  strength: strength
+  manufacturer: manufacturer
+  quantity_sold: sold_qty
+  fill_date: claim_date
+  rx_number: rx_number
+  fill_number: fill_number
+

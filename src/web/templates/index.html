@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Dashboard - DawaiRx</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2387e5",
+                        "primary-dark": "#1964c8",
+                        "background-light": "#f6f5f8",
+                        "background-dark": "#150f23",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e1b2e",
+                        "card-blue": "#eff4ff",
+                        "card-blue-dark": "#1c2236",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#110c1d] dark:text-gray-100 transition-colors duration-200 min-h-screen flex">
+    <!-- Left Sidebar Navigation -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-56 bg-surface-light dark:bg-surface-dark border-r border-gray-200/50 dark:border-gray-800/50 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <!-- Logo/Brand -->
+        <div class="flex items-center gap-3 px-4 py-4 border-b border-gray-200/50 dark:border-gray-800/50">
+            <div class="flex items-center justify-center size-10 bg-primary/10 rounded-md text-primary">
+                <span class="material-symbols-outlined text-lg">local_pharmacy</span>
+            </div>
+            <h2 class="text-base font-semibold tracking-tight text-slate-900 dark:text-white">DawaiRx</h2>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-3 py-4 space-y-1">
+            <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium transition-colors text-sm">
+                <span class="material-symbols-outlined text-lg">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="/new-report" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary transition-colors text-sm">
+                <span class="material-symbols-outlined text-lg">add_circle</span>
+                <span>New Report</span>
+            </a>
+            <a href="/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary transition-colors text-sm">
+                <span class="material-symbols-outlined text-lg">settings</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <!-- Logout Button -->
+        <div class="px-3 py-3 border-t border-gray-200/50 dark:border-gray-800/50">
+            <button id="logoutLink" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-red-600 dark:hover:text-red-400 transition-colors text-sm">
+                <span class="material-symbols-outlined text-lg">logout</span>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Overlay -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col lg:ml-56 min-w-0">
+        <!-- Mobile Header -->
+        <header class="lg:hidden sticky top-0 z-40 w-full border-b border-gray-200 dark:border-gray-800 bg-surface-light dark:bg-surface-dark px-4 py-3">
+            <div class="flex items-center justify-between">
+                <button onclick="toggleSidebar()" class="flex items-center justify-center size-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
+                    <span class="material-symbols-outlined text-2xl">menu</span>
+                </button>
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center justify-center size-8 bg-primary/10 rounded-lg text-primary">
+                        <span class="material-symbols-outlined">local_pharmacy</span>
+                    </div>
+                    <h2 class="text-base font-bold text-[#110c1d] dark:text-white">DawaiRx</h2>
+                </div>
+                <div class="w-10"></div>
+            </div>
+        </header>
+
+        <!-- Content Container -->
+        <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 py-4 lg:py-6 overflow-auto">
+        <!-- Page Header -->
+        <div class="mb-6">
+            <div class="flex flex-col gap-1">
+                <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-[#110c1d] dark:text-white">
+                    Report History
+                </h1>
+                <p class="text-gray-500 dark:text-gray-400 text-sm max-w-2xl">
+                    View and manage your reconciliation reports.
+                </p>
+            </div>
+        </div>
+
+        <!-- Detailed Breakdown Section -->
+        <div class="flex flex-col bg-surface-light dark:bg-surface-dark rounded-lg border border-gray-100/50 dark:border-gray-800/50 overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                <h2 class="text-base font-semibold text-[#110c1d] dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-base">description</span>
+                    Your Reports
+                </h2>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading" class="p-6 text-center">
+                <div class="flex flex-col items-center justify-center">
+                    <lottie-player 
+                        src="/static/loading/registro.json" 
+                        background="transparent" 
+                        speed="1" 
+                        style="width: 200px; height: 250px;" 
+                        loop 
+                        autoplay>
+                    </lottie-player>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mt-2">Loading reports...</p>
+                    <p class="text-gray-400 dark:text-gray-500 text-xs mt-1">Analyzing inventory data</p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="p-6 text-center" style="display: none;">
+                <div class="inline-flex items-center justify-center size-10 rounded-full bg-primary/10 text-primary mb-2">
+                    <span class="material-symbols-outlined text-xl">description</span>
+                </div>
+                <h3 class="text-base font-semibold text-[#110c1d] dark:text-white mb-1">No reports yet</h3>
+                <p class="text-gray-500 dark:text-gray-400 mb-4 text-sm">Get started by creating your first reconciliation report</p>
+                <a href="/new-report" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary hover:bg-primary-dark text-white text-sm font-semibold transition-all">
+                    <span class="material-symbols-outlined text-base">add</span>
+                    Start New Report
+                </a>
+            </div>
+
+            <!-- Table -->
+            <div id="runsTable" class="overflow-x-auto" style="display: none;">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-gray-50/30 dark:bg-gray-800/30 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-100 dark:border-gray-800">
+                        <tr>
+                            <th class="px-4 py-3 text-sm">Run ID</th>
+                            <th class="px-4 py-3 text-sm">Created</th>
+                            <th class="px-4 py-3 text-right text-sm">Medicines</th>
+                            <th class="px-4 py-3 text-right text-sm">Ordered</th>
+                            <th class="px-4 py-3 text-right text-sm">Sold</th>
+                            <th class="px-4 py-3 text-right text-sm">Issues</th>
+                            <th class="px-4 py-3 text-right text-sm">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800" id="runsBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-3" style="display: none;">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Showing <span id="showingFrom" class="font-medium text-[#110c1d] dark:text-white">0</span> to <span id="showingTo" class="font-medium text-[#110c1d] dark:text-white">0</span> of <span id="totalCount" class="font-medium text-[#110c1d] dark:text-white">0</span> results
+                </p>
+                <div class="flex items-center gap-1.5">
+                    <button id="prevPageBtn" onclick="changePage(-1)" class="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm" disabled>
+                        <span class="material-symbols-outlined text-base">chevron_left</span>
+                        <span>Prev</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <span id="currentPage" class="px-3 py-1 text-sm font-medium text-[#110c1d] dark:text-white">1</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">of</span>
+                        <span id="totalPages" class="px-3 py-1 text-sm font-medium text-[#110c1d] dark:text-white">1</span>
+                    </div>
+                    <button id="nextPageBtn" onclick="changePage(1)" class="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm" disabled>
+                        <span>Next</span>
+                        <span class="material-symbols-outlined text-sm">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Authentication helper
+        function getAuthToken() {
+            return localStorage.getItem('auth_token');
+        }
+        
+        function getAuthHeaders() {
+            const token = getAuthToken();
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
+        
+        function checkAuth() {
+            const token = getAuthToken();
+            if (!token) {
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+        
+        // Check authentication on page load
+        if (!checkAuth()) {
+            // Redirect will happen
+        }
+        
+        // Logout handler
+        const logoutLink = document.getElementById('logoutLink');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_id');
+                window.location.href = '/login';
+            });
+        }
+        
+        // Add error handler for 401 responses
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const response = await originalFetch(...args);
+            if (response.status === 401) {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_id');
+                window.location.href = '/login';
+            }
+            return response;
+        };
+        
+        // Pagination state
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let totalRuns = 0;
+
+        async function loadRuns(page = 1) {
+            console.log(`🔄 loadRuns called with page=${page}, currentPage=${currentPage}`);
+            currentPage = page;
+            const startTime = performance.now();
+            const offset = (page - 1) * itemsPerPage;
+            console.log(`📄 Calculating offset: (${page} - 1) * ${itemsPerPage} = ${offset}`);
+            
+            console.log(`🔄 Loading page ${page} (offset: ${offset})...`);
+            
+            try {
+                // Timeout - 8 seconds (should be fast with optimizations)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    console.error('⏱️ Request timeout after 8 seconds');
+                    controller.abort();
+                }, 8000);  // 8 second timeout
+                
+                console.log(`📡 Fetching /api/runs?limit=${itemsPerPage}&offset=${offset}...`);
+                const fetchStart = performance.now();
+                
+                const response = await fetch(`/api/runs?limit=${itemsPerPage}&offset=${offset}`, {
+                    headers: getAuthHeaders(),
+                    signal: controller.signal
+                });
+                
+                const fetchElapsed = ((performance.now() - fetchStart) / 1000).toFixed(2);
+                console.log(`📥 Response received in ${fetchElapsed}s, status: ${response.status}`);
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`❌ HTTP ${response.status}: ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                console.log('📦 Parsing JSON response...');
+                const parseStart = performance.now();
+                const data = await response.json();
+                const parseElapsed = ((performance.now() - parseStart) / 1000).toFixed(3);
+                console.log(`✅ JSON parsed in ${parseElapsed}s`);
+                
+                const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+                console.log(`✅ Total: Loaded ${data.runs?.length || 0} runs in ${elapsed}s`);
+                
+                // Update total count - ALWAYS use the value from API
+                // Don't estimate or modify - trust the API response
+                totalRuns = data.total || 0;
+                console.log(`📊 API Response: total=${totalRuns}, runs=${data.runs?.length || 0}, limit=${data.limit}, offset=${data.offset}`);
+                
+                // Only estimate if total is 0 (API count failed) AND we have runs
+                // This is a fallback for when count_runs fails
+                if (totalRuns === 0 && data.runs && data.runs.length > 0) {
+                    if (data.runs.length < itemsPerPage) {
+                        // Partial page - this is likely all of them
+                        totalRuns = offset + data.runs.length;
+                        console.log(`✅ Partial page detected, using actual count: ${totalRuns}`);
+                    } else {
+                        // Full page - can't know total, but set minimum
+                        totalRuns = data.runs.length;
+                        console.log(`⚠️ Full page but total is 0, using minimum: ${totalRuns}`);
+                    }
+                }
+                
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.runs && data.runs.length > 0) {
+                    
+                    const tbody = document.getElementById('runsBody');
+                    tbody.innerHTML = '';
+                    
+                    data.runs.forEach(run => {
+                        const stats = run.stats || {};
+                        const created = new Date(run.created_at).toLocaleString();
+                        const runId = run.run_id || 'N/A';
+                        
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group/row';
+                        row.style.cursor = 'pointer';
+                        row.setAttribute('data-run-id', runId);
+                        
+                        // Add click handler that works even with buttons inside
+                        row.addEventListener('click', function(e) {
+                            // Only navigate if clicking on the row itself, not buttons
+                            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+                                console.log('🖱️ Row clicked, navigating to report:', runId);
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (runId && runId !== 'N/A') {
+                                    viewRun(runId);
+                                } else {
+                                    console.error('❌ Invalid runId:', runId);
+                                }
+                                return false;
+                            }
+                        });
+                        
+                        row.innerHTML = `
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="size-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-primary text-xs font-semibold">R</div>
+                                    <div>
+                                        <p class="font-medium text-[#110c1d] dark:text-white text-sm">${runId}</p>
+                                        <p class="text-xs text-gray-500">${created}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-sm">${created}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 text-sm">${(stats.total_medicines || 0).toLocaleString()}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 text-sm">${(stats.total_ordered || 0).toLocaleString()}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 text-sm">${(stats.total_sold || 0).toLocaleString()}</td>
+                            <td class="px-4 py-3 text-right">
+                                ${(stats.total_issues || 0) > 0 
+                                    ? `<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">${stats.total_issues}</span>`
+                                    : '<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">0</span>'
+                                }
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                   <button onclick="downloadFile('${runId}', 'inventory_report'); event.stopPropagation();" class="text-primary font-medium text-sm hover:underline flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-primary/10 transition-colors" title="Download Report">
+                                       <span class="material-symbols-outlined text-base align-middle">download</span>
+                                   </button>
+                                   <button onclick="deleteRun('${runId}'); event.stopPropagation();" class="text-red-600 dark:text-red-400 font-medium text-sm hover:underline flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete Report">
+                                       <span class="material-symbols-outlined text-base align-middle">delete</span>
+                                   </button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    document.getElementById('runsTable').style.display = 'block';
+                    document.getElementById('pagination').style.display = 'flex';
+                    document.getElementById('emptyState').style.display = 'none';
+                    
+                    // Update pagination info
+                    // showingFrom: first item number on this page (offset + 1)
+                    // showingTo: last item number on this page (offset + actual items on page)
+                    // totalCount: use the actual total from API, not estimated
+                    const showingFrom = offset + 1;
+                    const showingTo = offset + data.runs.length;
+                    const totalPages = totalRuns > 0 ? Math.ceil(totalRuns / itemsPerPage) : 1;
+                    
+                    console.log(`📄 Pagination display:`, {
+                        offset: offset,
+                        runsOnPage: data.runs.length,
+                        totalRuns: totalRuns,
+                        showingFrom: showingFrom,
+                        showingTo: showingTo,
+                        currentPage: currentPage,
+                        totalPages: totalPages
+                    });
+                    
+                    document.getElementById('showingFrom').textContent = showingFrom;
+                    document.getElementById('showingTo').textContent = showingTo;
+                    document.getElementById('totalCount').textContent = totalRuns;
+                    document.getElementById('currentPage').textContent = currentPage;
+                    document.getElementById('totalPages').textContent = totalPages;
+                    
+                    // Update pagination buttons
+                    const prevBtn = document.getElementById('prevPageBtn');
+                    const nextBtn = document.getElementById('nextPageBtn');
+                    if (prevBtn) {
+                        prevBtn.disabled = currentPage <= 1;
+                    }
+                    if (nextBtn) {
+                        // Disable next if: on last page, no total, or showingTo equals total
+                        const isLastPage = showingTo >= totalRuns || currentPage >= totalPages;
+                        nextBtn.disabled = isLastPage || totalRuns === 0;
+                        console.log(`🔘 Next button: disabled=${nextBtn.disabled} (isLastPage=${isLastPage}, totalRuns=${totalRuns})`);
+                    }
+                } else {
+                    // No runs found, but might be on a later page
+                    if (totalRuns > 0 && offset >= totalRuns) {
+                        // We're past the last page, go back to page 1
+                        console.log('⚠️ Past last page, redirecting to page 1');
+                        loadRuns(1);
+                        return;
+                    }
+                    
+                    document.getElementById('emptyState').style.display = 'block';
+                    document.getElementById('runsTable').style.display = 'none';
+                    document.getElementById('pagination').style.display = 'none';
+                }
+            } catch (error) {
+                const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+                console.error(`❌ Error loading runs after ${elapsed}s:`, error);
+                console.error('   Error name:', error.name);
+                console.error('   Error message:', error.message);
+                if (error.stack) {
+                    console.error('   Error stack:', error.stack);
+                }
+                
+                const isTimeout = error.name === 'AbortError' || error.message?.includes('timeout');
+                const errorMessage = isTimeout
+                    ? `Request timed out after ${elapsed}s. The database connection may be slow. Please try again or check your internet connection.`
+                    : `Error: ${error.message || 'Unknown error occurred'}`;
+                
+                document.getElementById('loading').innerHTML = `
+                    <div class="inline-flex items-center justify-center size-12 rounded-full bg-red-100 text-red-600 mb-4">
+                        <span class="material-symbols-outlined">error</span>
+                    </div>
+                    <p class="text-red-600 dark:text-red-400 font-semibold">Error loading reports</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">${errorMessage}</p>
+                    <button onclick="loadRuns()" class="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
+                        Retry
+                    </button>
+                `;
+            }
+        }
+        
+        function changePage(delta) {
+            console.log(`🔄 changePage called with delta=${delta}, currentPage=${currentPage}, totalRuns=${totalRuns}`);
+            const newPage = currentPage + delta;
+            const totalPages = Math.max(1, Math.ceil(totalRuns / itemsPerPage));
+            console.log(`📄 New page would be: ${newPage}, totalPages: ${totalPages}`);
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                console.log(`✅ Loading page ${newPage}...`);
+                loadRuns(newPage);
+                // Scroll to top of table
+                document.getElementById('runsTable')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                console.warn(`⚠️ Cannot navigate to page ${newPage}: out of range (1-${totalPages})`);
+            }
+        }
+
+        function viewRun(runId) {
+            console.log('🔍 viewRun called with runId:', runId);
+            if (!runId || runId === 'N/A') {
+                console.error('❌ Invalid runId:', runId);
+                alert('Invalid report ID');
+                return;
+            }
+            const url = `/new-report?run_id=${encodeURIComponent(runId)}`;
+            console.log('✅ Navigating to:', url);
+            window.location.href = url;
+        }
+
+        // Make viewRun globally accessible
+        window.viewRun = viewRun;
+
+        // Download file function (same as in new-report.html)
+        async function downloadFile(runId, fileType) {
+            try {
+                console.log(`📥 Download requested: runId=${runId}, fileType=${fileType}`);
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    alert('Please log in to download files');
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                const response = await fetch(`/api/download/${runId}/${fileType}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                console.log(`📥 Download response: ${response.status} ${response.statusText}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Download failed' }));
+                    console.error('❌ Download error response:', errorData);
+                    throw new Error(errorData.detail || 'Download failed');
+                }
+                
+                // Get filename from Content-Disposition header or use default
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename;
+                
+                if (contentDisposition) {
+                    // Try to extract filename from Content-Disposition header
+                    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                // If no filename from header, generate based on file type
+                if (!filename) {
+                    if (fileType === 'inventory_report') {
+                        filename = 'inventory_report.csv';
+                    } else if (fileType === 'audit_report_detailed' || fileType === 'audit_report_pdf') {
+                        filename = 'audit_report_detailed.pdf';
+                    } else if (fileType === 'audit_report') {
+                        filename = 'audit_report.xlsx';
+                    } else {
+                        // Fallback: determine extension from fileType
+                        const extension = fileType.includes('pdf') ? 'pdf' : 
+                                        (fileType.includes('xlsx') || fileType.includes('excel')) ? 'xlsx' : 'csv';
+                        filename = `${fileType}.${extension}`;
+                    }
+                }
+                
+                console.log(`📥 Final filename: ${filename}`);
+                
+                // Create blob and download
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                console.log('✅ File downloaded successfully!');
+            } catch (error) {
+                console.error('❌ Download error:', error);
+                alert('❌ Download failed: ' + error.message);
+            }
+        }
+        
+        // Make downloadFile available globally
+        window.downloadFile = downloadFile;
+
+        async function deleteRun(runId) {
+            // Confirm deletion
+            if (!confirm(`Are you sure you want to delete report "${runId}"? This action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                console.log(`🗑️ Deleting run: ${runId}`);
+                
+                const response = await fetch(`/api/runs/${runId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+                    throw new Error(errorData.detail || `HTTP ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log(`✅ Deleted run: ${runId}`, result);
+                
+                // Show success message
+                const successMsg = document.createElement('div');
+                successMsg.className = 'fixed top-20 right-6 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2';
+                successMsg.innerHTML = `
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span>Report deleted successfully</span>
+                `;
+                document.body.appendChild(successMsg);
+                setTimeout(() => successMsg.remove(), 3000);
+                
+                // Reload the runs list (stay on current page)
+                loadRuns(currentPage);
+            } catch (error) {
+                console.error(`❌ Error deleting run ${runId}:`, error);
+                
+                // Show error message
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'fixed top-20 right-6 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2';
+                errorMsg.innerHTML = `
+                    <span class="material-symbols-outlined">error</span>
+                    <span>Failed to delete report: ${error.message}</span>
+                `;
+                document.body.appendChild(errorMsg);
+                setTimeout(() => errorMsg.remove(), 5000);
+            }
+        }
+        
+        // Load runs on page load
+        loadRuns();
+
+        // Sidebar toggle for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

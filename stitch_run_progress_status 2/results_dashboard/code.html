@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PharmacyAudit Pro - Audit Results</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5e1fff",
+                        "primary-dark": "#4a15cc",
+                        "background-light": "#f6f5f8",
+                        "background-dark": "#150f23",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e1b2e",
+                        "card-blue": "#eff4ff", // Light blue for cards
+                        "card-blue-dark": "#1c2236", // Dark mode equivalent
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#110c1d] dark:text-gray-100 transition-colors duration-200 min-h-screen flex flex-col">
+<!-- Main Layout -->
+<div class="relative flex flex-col min-h-screen w-full overflow-x-hidden">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 w-full border-b border-[#eae6f4] dark:border-gray-800 bg-surface-light/80 dark:bg-surface-dark/90 backdrop-blur-md px-6 py-3">
+<div class="max-w-[1440px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-9 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">local_pharmacy</span>
+</div>
+<h2 class="text-lg font-bold tracking-tight text-[#110c1d] dark:text-white">PharmacyAudit Pro</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span>Support</span>
+</div>
+<div class="flex items-center gap-3 pl-6 border-l border-gray-200 dark:border-gray-700">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-semibold text-[#110c1d] dark:text-white leading-none">Dr. Sarah Smith</p>
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Head Pharmacist</p>
+</div>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-white dark:border-gray-700 shadow-sm" data-alt="Profile picture of a pharmacist in a white coat smiling" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCxNAo0f6AXu8zPSmiCtvbLJnpY2lBQjf5_nsnc9QC44RADfd4Vrn6xXr2c5DpUy6VbC3bDlhPgLOqjdicE8nfy5SDI5-XlaqyA_z0TzUsUpnqYqKBYxJkkXUc_9mTx5qQQVX9PD5wXgo92eF6QQqc2e0cj7t0Zb3sptnYvtkFzkJHc1iBvProtNqNOwTXsZWkcD6oO-XLK5CNC8JohPu0B2OOPUUPikN4BK4gP0u-3Bxhl4X-9LhEKYoJIU50Q6i4E-ECw5juK7Fw");'>
+</div>
+<button class="flex items-center justify-center size-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors">
+<span class="material-symbols-outlined">logout</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Container -->
+<main class="flex-1 w-full max-w-[1440px] mx-auto px-6 py-8">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+                    Audits
+                </a>
+<span class="material-symbols-outlined text-[16px] text-gray-300">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Audit #1234</a>
+<span class="material-symbols-outlined text-[16px] text-gray-300">chevron_right</span>
+<span class="font-medium text-primary">Results</span>
+</nav>
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+<div class="flex flex-col gap-2">
+<h1 class="text-3xl md:text-4xl font-black tracking-tight text-[#110c1d] dark:text-white">
+                        Audit Results: Oct 2023
+                    </h1>
+<p class="text-gray-500 dark:text-gray-400 text-base max-w-2xl">
+                        Comprehensive reconciliation for inventory count #1234 performed on October 31st.
+                    </p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-surface-light dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-[#110c1d] dark:text-white text-sm font-semibold transition-all shadow-sm">
+<span class="material-symbols-outlined text-[20px]">print</span>
+                        Print
+                    </button>
+<button class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-bold shadow-md shadow-primary/20 transition-all">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                        Export Report
+                    </button>
+</div>
+</div>
+<!-- Stats Grid -->
+<!-- Requirement: Light blue background, rounded corners, large solid blue numbers -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-12">
+<!-- Card 1 -->
+<div class="flex flex-col p-6 rounded-2xl bg-[#eef4ff] dark:bg-primary/10 border border-blue-100 dark:border-primary/20 hover:shadow-lg transition-shadow duration-300 group">
+<div class="flex items-start justify-between mb-4">
+<p class="text-gray-600 dark:text-blue-200 text-sm font-semibold uppercase tracking-wider">Total Ordered</p>
+<div class="p-2 bg-white/60 dark:bg-white/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+</div>
+<p class="text-primary dark:text-blue-300 text-3xl font-black tracking-tight mt-auto group-hover:scale-105 transition-transform origin-left">1,240</p>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Units</p>
+</div>
+<!-- Card 2 -->
+<div class="flex flex-col p-6 rounded-2xl bg-[#eef4ff] dark:bg-primary/10 border border-blue-100 dark:border-primary/20 hover:shadow-lg transition-shadow duration-300 group">
+<div class="flex items-start justify-between mb-4">
+<p class="text-gray-600 dark:text-blue-200 text-sm font-semibold uppercase tracking-wider">Total Sold</p>
+<div class="p-2 bg-white/60 dark:bg-white/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">point_of_sale</span>
+</div>
+</div>
+<p class="text-primary dark:text-blue-300 text-3xl font-black tracking-tight mt-auto group-hover:scale-105 transition-transform origin-left">980</p>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Units</p>
+</div>
+<!-- Card 3 -->
+<div class="flex flex-col p-6 rounded-2xl bg-[#eef4ff] dark:bg-primary/10 border border-blue-100 dark:border-primary/20 hover:shadow-lg transition-shadow duration-300 group">
+<div class="flex items-start justify-between mb-4">
+<p class="text-gray-600 dark:text-blue-200 text-sm font-semibold uppercase tracking-wider">Remaining</p>
+<div class="p-2 bg-white/60 dark:bg-white/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">shelves</span>
+</div>
+</div>
+<p class="text-primary dark:text-blue-300 text-3xl font-black tracking-tight mt-auto group-hover:scale-105 transition-transform origin-left">260</p>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Units on shelf</p>
+</div>
+<!-- Card 4: Shortages (Negative context, but maintaining blue number style per prompt, maybe slight accent) -->
+<div class="flex flex-col p-6 rounded-2xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 hover:shadow-lg transition-shadow duration-300 group">
+<div class="flex items-start justify-between mb-4">
+<p class="text-red-800 dark:text-red-200 text-sm font-semibold uppercase tracking-wider">Shortages</p>
+<div class="p-2 bg-white/60 dark:bg-white/10 rounded-lg text-red-600 dark:text-red-400">
+<span class="material-symbols-outlined">trending_down</span>
+</div>
+</div>
+<p class="text-red-600 dark:text-red-400 text-3xl font-black tracking-tight mt-auto group-hover:scale-105 transition-transform origin-left">-15</p>
+<p class="text-sm text-red-700/60 dark:text-red-300/60 mt-1">Units missing</p>
+</div>
+<!-- Card 5: Issues (Warning context) -->
+<div class="flex flex-col p-6 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 hover:shadow-lg transition-shadow duration-300 group">
+<div class="flex items-start justify-between mb-4">
+<p class="text-amber-800 dark:text-amber-200 text-sm font-semibold uppercase tracking-wider">Issues Found</p>
+<div class="p-2 bg-white/60 dark:bg-white/10 rounded-lg text-amber-600 dark:text-amber-400">
+<span class="material-symbols-outlined">flag</span>
+</div>
+</div>
+<p class="text-amber-600 dark:text-amber-400 text-3xl font-black tracking-tight mt-auto group-hover:scale-105 transition-transform origin-left">3</p>
+<p class="text-sm text-amber-700/60 dark:text-amber-300/60 mt-1">Require review</p>
+</div>
+</div>
+<!-- Detailed Breakdown Section -->
+<div class="flex flex-col bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+<div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+<h2 class="text-xl font-bold text-[#110c1d] dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">list_alt</span>
+                        Detailed Breakdown
+                    </h2>
+<div class="flex gap-2">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-[20px]">search</span>
+<input class="pl-10 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-900 border-none text-sm text-gray-700 dark:text-gray-200 w-64 focus:ring-2 focus:ring-primary/50" placeholder="Search by SKU or Name..." type="text"/>
+</div>
+<button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm whitespace-nowrap">
+<thead class="bg-gray-50/50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-100 dark:border-gray-800">
+<tr>
+<th class="px-6 py-4">Medication Name</th>
+<th class="px-6 py-4">SKU / NDC</th>
+<th class="px-6 py-4 text-right">Ordered</th>
+<th class="px-6 py-4 text-right">Sold</th>
+<th class="px-6 py-4 text-right">Remaining</th>
+<th class="px-6 py-4 text-center">Variance</th>
+<th class="px-6 py-4 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+<!-- Row 1 -->
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group/row">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-primary text-xs font-bold">L</div>
+<div>
+<p class="font-semibold text-[#110c1d] dark:text-white">Lisinopril 10mg</p>
+<p class="text-xs text-gray-500">Tab</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-400">68180-0515-01</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">500</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">380</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">120</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                        Match
+                                    </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2: Shortage -->
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group/row">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-primary text-xs font-bold">A</div>
+<div>
+<p class="font-semibold text-[#110c1d] dark:text-white">Amoxicillin 500mg</p>
+<p class="text-xs text-gray-500">Cap</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-400">00093-3109-05</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">200</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">150</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">40</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                        -10
+                                        <span class="material-symbols-outlined text-[14px]">trending_down</span>
+</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary font-medium text-sm hover:underline">Reconcile</button>
+</td>
+</tr>
+<!-- Row 3: Issue -->
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group/row">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 text-xs font-bold">M</div>
+<div>
+<p class="font-semibold text-[#110c1d] dark:text-white">Metformin 500mg</p>
+<p class="text-xs text-gray-500">Tab</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-400">60505-0258-01</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">1000</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">400</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">600</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                                        Flagged
+                                        <span class="material-symbols-outlined text-[14px]">flag</span>
+</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary font-medium text-sm hover:underline">Review</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group/row">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-primary text-xs font-bold">Z</div>
+<div>
+<p class="font-semibold text-[#110c1d] dark:text-white">Zolpidem 10mg</p>
+<p class="text-xs text-gray-500">Tab</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-400">00178-0500-01</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">30</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">15</td>
+<td class="px-6 py-4 text-right text-gray-700 dark:text-gray-300">15</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                        Match
+                                    </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+<p class="text-sm text-gray-500 dark:text-gray-400">Showing 1 to 4 of 128 results</p>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded border border-gray-200 dark:border-gray-700 text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Previous</button>
+<button class="px-3 py-1 rounded border border-gray-200 dark:border-gray-700 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">Next</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

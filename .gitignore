@@ -22,11 +22,13 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.pyd
 
 # Virtual environments
 venv/
 ENV/
 env/
+.venv/
 
 # IDE
 .vscode/
@@ -62,3 +64,14 @@ out/
 tmp/
 temp/
 *.tmp
+
+# Screenshots and test files
+stitch_run_progress_status*/
+*.png
+*.jpg
+*.jpeg
+!sample_data/*.png
+
+# Process IDs
+*.pid
+web_server.pid

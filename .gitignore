@@ -52,6 +52,12 @@ out/
 !sample_data/*.csv
 !sample_data/*.xlsx
 
+# Test files
+test_*.csv
+test_*.log
+generated_report.csv
+*_output.csv
+
 # Environment variables
 .env
 .env.local

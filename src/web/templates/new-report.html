@@ -92,21 +92,43 @@
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 py-4 lg:py-6 flex flex-col overflow-auto relative">
+        <main class="flex-1 w-full flex flex-col overflow-hidden relative">
         
+        <!-- Report Header (shown when viewing report) -->
+        <div id="reportHeader" class="hidden mb-6 px-4 sm:px-6 lg:px-8 pt-6 lg:pt-8">
+            <div class="flex items-start justify-between">
+                <!-- Left side: Report title and metadata -->
+                <div class="flex flex-col gap-1.5">
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-0" id="reportHeaderName"></h1>
+                    <p class="text-base text-slate-600 dark:text-slate-400 mt-0.5" id="reportDateRange"></p>
+                    <p class="text-sm text-slate-500 dark:text-slate-500 mt-0.5" id="reportGeneratedDate"></p>
+                </div>
+                <!-- Right side: Download button -->
+                <div id="downloadLinks" class="flex justify-end mt-1"></div>
+            </div>
+        </div>
+        
+        <!-- Results Section (shown when viewing report) -->
+        <div id="results" class="mt-0 w-full px-4 sm:px-6 lg:px-8 hidden relative flex-1 flex flex-col min-h-0">
+            <!-- Table Section -->
+            <div id="dataTables" class="mb-0"></div>
+        </div>
+        
+        <!-- Content Container (centered) - for form steps only -->
+        <div id="centeredContentContainer" class="flex-1 flex flex-col items-center justify-start w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         
         <!-- Page Heading -->
-        <div class="text-center mb-6" id="pageHeading">
-            <h2 class="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-1">
+        <div class="text-center mb-8 w-full max-w-4xl" id="pageHeading">
+            <h2 class="text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
                 Create New Report
             </h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400">
+            <p class="text-base text-slate-500 dark:text-slate-400">
                 Follow the steps below to generate your inventory reconciliation report.
             </p>
         </div>
 
         <!-- Step Indicators -->
-        <div id="stepIndicators" class="max-w-2xl mx-auto mb-6">
+        <div id="stepIndicators" class="w-full max-w-3xl mx-auto mb-8">
             <div class="flex items-center justify-between">
                 <!-- Step 1 -->
                 <div class="flex flex-col items-center flex-1">
@@ -139,8 +161,8 @@
         </div>
 
         <!-- Step 1: Date Range Selection -->
-        <div id="step1" class="max-w-xl mx-auto w-full mb-6">
-            <div class="bg-surface-light dark:bg-surface-dark rounded-lg border border-slate-200/50 dark:border-slate-700/50 p-6">
+        <div id="step1" class="w-full max-w-2xl mx-auto mb-6">
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 p-8">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="material-symbols-outlined text-primary text-xl">calendar_today</span>
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Select Date Range</h3>
@@ -184,8 +206,8 @@
         </div>
 
         <!-- Step 2: Report Name -->
-        <div id="step2" class="max-w-2xl mx-auto w-full mb-6 hidden" style="display: none;">
-            <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div id="step2" class="w-full max-w-2xl mx-auto mb-6 hidden">
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-8">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="material-symbols-outlined text-primary text-2xl">edit</span>
                     <h3 class="text-xl font-bold text-slate-900 dark:text-white">Report Name</h3>
@@ -220,12 +242,12 @@
         </div>
 
         <!-- Step 3: File Upload -->
-        <div id="step3" class="max-w-2xl mx-auto w-full mb-6 hidden" style="display: none;">
+        <div id="step3" class="w-full max-w-4xl mx-auto mb-6 hidden" style="display: none;">
             <!-- Upload Section -->
-            <div id="uploadSection" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div id="uploadSection" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 items-start">
             <!-- Inventory Report Card -->
-            <div class="group relative flex flex-col bg-surface-light dark:bg-surface-dark rounded-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
-                <div class="p-5 flex flex-col items-center flex-1">
+            <div class="group relative flex flex-col bg-surface-light dark:bg-surface-dark rounded-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden h-fit">
+                <div class="p-5 flex flex-col items-center">
                     <div class="mb-4 p-3 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
                         <span class="material-symbols-outlined text-2xl">point_of_sale</span>
                     </div>
@@ -233,7 +255,7 @@
                     <p class="text-sm text-slate-500 dark:text-slate-400 text-center mb-4">
                         Upload dispensing log
                     </p>
-                    <div class="w-full mt-auto">
+                    <div class="w-full">
                         <label for="soldFile" class="relative flex flex-col items-center justify-center w-full h-24 border border-dashed border-slate-200 dark:border-slate-600 rounded-md cursor-pointer bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-primary transition-all">
                             <div class="flex flex-col items-center justify-center pt-4 pb-4">
                                 <span class="material-symbols-outlined text-slate-400 mb-1 text-lg">cloud_upload</span>
@@ -247,8 +269,8 @@
             </div>
 
             <!-- Supplier Reports Card -->
-            <div class="group relative flex flex-col bg-surface-light dark:bg-surface-dark rounded-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
-                <div class="p-5 flex flex-col items-center flex-1">
+            <div class="group relative flex flex-col bg-surface-light dark:bg-surface-dark rounded-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden h-fit">
+                <div class="p-5 flex flex-col items-center">
                     <div class="mb-4 p-3 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500/20 transition-colors">
                         <span class="material-symbols-outlined text-2xl">inventory_2</span>
                     </div>
@@ -256,22 +278,24 @@
                     <p class="text-sm text-slate-500 dark:text-slate-400 text-center mb-4">
                         Upload wholesaler invoice
                     </p>
-                    <div class="w-full mt-auto">
+                    <div class="w-full">
                         <label for="orderedFiles" class="relative flex flex-col items-center justify-center w-full h-24 border border-dashed border-slate-200 dark:border-slate-600 rounded-md cursor-pointer bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-teal-500 transition-all">
                             <div class="flex flex-col items-center justify-center pt-4 pb-4">
                                 <span class="material-symbols-outlined text-slate-400 mb-1 text-lg">cloud_upload</span>
                                 <p class="text-sm text-slate-500 dark:text-slate-400"><span class="font-medium text-teal-600 dark:text-teal-400">Click to upload</span></p>
                                 <p class="text-xs text-slate-400 mt-1" id="orderedFileName">No files chosen</p>
                             </div>
-                            <input class="hidden" id="orderedFiles" name="orderedFiles" type="file" accept=".csv,.xlsx,.xls" multiple required/>
+                            <input class="hidden" id="orderedFiles" name="orderedFiles" type="file" accept=".csv,.xlsx,.xls" multiple/>
                         </label>
+                        <!-- Selected files list with delete buttons -->
+                        <div id="orderedFilesList" class="mt-3 space-y-2 max-h-48 overflow-y-auto"></div>
                     </div>
                 </div>
             </div>
             </div>
 
             <!-- Action Section with Run Button -->
-            <div id="actionSection" class="max-w-2xl mx-auto flex flex-col items-center justify-center gap-4">
+            <div id="actionSection" class="w-full max-w-4xl mx-auto flex flex-col items-center justify-center gap-4">
                 <div class="flex items-center gap-4 w-full">
                     <button id="step3Back" class="px-5 py-2.5 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium rounded-md transition-colors flex items-center gap-2">
                         <span class="material-symbols-outlined text-lg">arrow_back</span>
@@ -284,10 +308,9 @@
                     </button>
                 </div>
             </div>
-        </div>
-
         <!-- Status Message -->
-        <div id="status" class="mt-4 mx-auto max-w-xl hidden"></div>
+        <div id="status" class="mt-4 mx-auto max-w-2xl hidden"></div>
+        </div> <!-- End centered content container -->
 
         <!-- Progress Screen (Audit in Progress) -->
         <div id="progressScreen" class="absolute inset-0 z-40 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm flex items-center justify-center hidden" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
@@ -379,15 +402,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Results Section -->
-        <div id="results" class="mt-6 w-full hidden relative">
-            <!-- Table Section -->
-            <div id="dataTables" class="mb-4"></div>
-            
-            <!-- Download Links -->
-            <div id="downloadLinks" class="flex flex-wrap gap-2 justify-center"></div>
         </div>
         </main>
     </div>
@@ -553,8 +567,8 @@
             }
             
             let tablesHTML = `
-                <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-                    <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+                <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full">
+                    <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
                         <div class="flex items-center justify-between mb-4">
                             <p class="text-sm text-gray-500 dark:text-gray-400">${filteredRows.length} medicines</p>
                         </div>
@@ -571,7 +585,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="overflow-x-auto overflow-y-auto" style="max-height: calc(100vh - 400px); position: relative;" id="tableContainer">
+                    <div class="overflow-x-auto overflow-y-auto flex-1 min-h-0" id="tableContainer">
                         <table class="w-full text-left border-collapse" style="min-width: 100%;">
                             <thead style="position: sticky; top: 0; z-index: 30; background-color: rgb(249 250 251);" class="dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-100 dark:border-gray-800">
                                 <tr>
@@ -615,7 +629,15 @@
             filteredRows.forEach((row) => {
                 const drugNameCol = columns.find(col => col.toLowerCase().includes('drug') && col.toLowerCase().includes('name')) || columns[1];
                 const drugName = (row[drugNameCol] || '').toString().toLowerCase();
-                tablesHTML += `<tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors" data-drug-name="${drugName}" onclick="event.stopPropagation();">`;
+                
+                // Get medicine identifier for row click
+                const ndcCol = columns.find(col => col.toLowerCase().includes('ndc')) || columns[0];
+                const ndcValue = row[ndcCol] || '';
+                const medicineIdentifier = ndcValue || row[drugNameCol] || '';
+                const safeIdentifier = String(medicineIdentifier).replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ').replace(/\r/g, '');
+                
+                // Make entire row clickable
+                tablesHTML += `<tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer medicine-row" data-drug-name="${drugName}" data-run-id="${runId}" data-medicine-id="${safeIdentifier}">`;
                 
                 columns.forEach((col, index) => {
                     let value = row[col] !== undefined && row[col] !== null ? row[col] : '';
@@ -643,14 +665,6 @@
                     } else if (index === 1) {
                         stickyClass = 'bg-white dark:bg-gray-900';
                         stickyStyle = 'position: sticky; left: 120px; z-index: 20; min-width: 200px; box-shadow: 2px 0 4px rgba(0,0,0,0.1);';
-                        // Make drug name clickable
-                        const ndcCol = columns.find(col => col.toLowerCase().includes('ndc')) || columns[0];
-                        const ndcValue = row[ndcCol] || '';
-                        const medicineIdentifier = ndcValue || row[drugNameCol] || '';
-                        // Escape quotes and special characters for JavaScript
-                        const safeIdentifier = String(medicineIdentifier).replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ').replace(/\r/g, '');
-                        const safeValue = String(value).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                        value = `<span class="text-primary hover:underline cursor-pointer font-medium medicine-detail-link" data-run-id="${runId}" data-medicine-id="${safeIdentifier}">${safeValue}</span>`;
                     }
                     tablesHTML += `<td class="px-3 py-2 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap ${stickyClass}" style="${stickyStyle}">${value}</td>`;
                 });
@@ -661,10 +675,9 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-800 text-center">
+                    <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-800 text-center flex-shrink-0">
                         <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Showing ${filteredRows.length} of ${dataRows.length} medicines. 
-                            <button onclick="downloadFile('${runId}', 'inventory_report')" class="text-primary hover:underline font-medium cursor-pointer">Download CSV</button>
+                            Showing ${filteredRows.length} of ${dataRows.length} medicines
                         </p>
                     </div>
                 </div>
@@ -672,18 +685,22 @@
             
             dataTablesDiv.innerHTML = tablesHTML;
             
-            // Attach click handlers to medicine detail links using event delegation
+            // Attach click handlers to medicine rows using event delegation
             const tableContainer = document.getElementById('tableContainer');
             if (tableContainer) {
-                // Use a single event handler for all medicine detail links
+                // Use a single event handler for all medicine rows
                 tableContainer.addEventListener('click', function(e) {
-                    const link = e.target.closest('.medicine-detail-link');
-                    if (link) {
+                    // Check if clicked on a row or any cell in a row
+                    let row = e.target.closest('.medicine-row');
+                    if (!row && e.target.tagName === 'TD') {
+                        row = e.target.closest('tr.medicine-row');
+                    }
+                    if (row) {
                         e.stopPropagation();
                         e.preventDefault();
-                        const runId = link.getAttribute('data-run-id');
-                        const medicineId = link.getAttribute('data-medicine-id');
-                        console.log('🔍 Medicine link clicked:', runId, medicineId);
+                        const runId = row.getAttribute('data-run-id');
+                        const medicineId = row.getAttribute('data-medicine-id');
+                        console.log('🔍 Medicine row clicked:', runId, medicineId);
                         if (runId && medicineId) {
                             if (window.showMedicineDetails) {
                                 window.showMedicineDetails(runId, medicineId);
@@ -761,11 +778,16 @@
                 panel.style.zIndex = '99999';
                 panel.style.position = 'fixed';
                 panel.innerHTML = `
-                    <div class="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between z-10">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="medicineDetailTitle">Medicine Details</h3>
-                        <button id="closeMedicinePanelBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                            <span class="material-symbols-outlined text-2xl">close</span>
-                        </button>
+                    <div class="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 z-10">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="medicineDetailTitle">Medicine Details</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" id="medicineDetailNDC"></p>
+                            </div>
+                            <button id="closeMedicinePanelBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <span class="material-symbols-outlined text-2xl">close</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="p-6" id="medicineDetailContent">
                         <div class="flex items-center justify-center py-12">
@@ -855,39 +877,52 @@
                 const data = await response.json();
                 console.log('✅ Medicine details loaded:', data);
                 
-                // Update title
+                // Update title and NDC subtitle
+                const ndcDiv = document.getElementById('medicineDetailNDC');
                 if (titleDiv && data.medicine_key) {
                     const drugName = data.sold_entries[0]?.drug_name || data.ordered_entries[0]?.drug_name || medicineIdentifier;
                     titleDiv.textContent = drugName;
+                    
+                    // Add NDC as subtitle
+                    const ndc = data.sold_entries[0]?.ndc || data.ordered_entries[0]?.ndc || 'N/A';
+                    if (ndcDiv) {
+                        ndcDiv.textContent = `NDC: ${ndc}`;
+                    }
                 }
                 
-                // Format date
+                // Format date - parse as local date to avoid timezone shifts
                 function formatDate(dateStr) {
                     if (!dateStr) return 'N/A';
                     try {
-                        const date = new Date(dateStr);
-                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        // If date is in YYYY-MM-DD format, parse as local date (not UTC)
+                        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                            const [year, month, day] = dateStr.split('-').map(Number);
+                            // Create date in local timezone (month is 0-indexed in JavaScript Date)
+                            const date = new Date(year, month - 1, day);
+                            // Verify the date is valid and matches what we expect
+                            if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
+                                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                            } else {
+                                // If date construction failed (e.g., invalid date), return formatted string
+                                return `${month}/${day}/${year}`;
+                            }
+                        } else {
+                            // For other formats, try to parse but be careful with timezone
+                            const date = new Date(dateStr);
+                            // Check if date is valid
+                            if (isNaN(date.getTime())) {
+                                return dateStr;
+                            }
+                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        }
                     } catch (e) {
                         return dateStr;
                     }
                 }
                 
-                // Build HTML
+                // Build HTML (Drug Information section removed - NDC is now in the title)
                 let html = `
                     <div class="space-y-6">
-                        <div>
-                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Drug Information</h4>
-                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">NDC:</span>
-                                    <span class="text-sm font-mono text-gray-900 dark:text-white">${data.sold_entries[0]?.ndc || data.ordered_entries[0]?.ndc || 'N/A'}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Medicine Key:</span>
-                                    <span class="text-xs font-mono text-gray-600 dark:text-gray-400">${data.medicine_key}</span>
-                                </div>
-                            </div>
-                        </div>
                 `;
                 
                 // Supplier entries (ordered)
@@ -958,6 +993,69 @@
                                 </td>
                                 <td class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">${formatDate(entry.date)}</td>
                                 <td class="px-4 py-2 text-sm text-right font-medium text-gray-900 dark:text-white">${entry.quantity || 0}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Report Data (non-empty fields from DawaiRx report)
+                if (data.report_data && Object.keys(data.report_data).length > 0) {
+                    html += `
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Report Data</h4>
+                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-100 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">Field</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300">Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    `;
+                    
+                    // Sort fields for better display (put common fields first)
+                    // Exclude NDC and DRUG NAME as they're already shown in the title/subtitle
+                    const fieldsToExclude = ['NDC', 'DRUG NAME'];
+                    const fieldOrder = ['RANK', 'PKG SIZE', 'TOTAL\nORDERED-O', 'TOTAL\nBILLED-B', 'TOTAL\nSHORTAGE-S', 'HIGHEST\nSHORTAGE-S', 'AMOUNT', 'COST'];
+                    const sortedFields = Object.keys(data.report_data)
+                        .filter(field => !fieldsToExclude.includes(field))
+                        .sort((a, b) => {
+                            const aIndex = fieldOrder.indexOf(a);
+                            const bIndex = fieldOrder.indexOf(b);
+                            if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+                            if (aIndex !== -1) return -1;
+                            if (bIndex !== -1) return 1;
+                            return a.localeCompare(b);
+                        });
+                    
+                    sortedFields.forEach(field => {
+                        const value = data.report_data[field];
+                        // Format value based on type
+                        let displayValue = value;
+                        if (typeof value === 'number') {
+                            // Format numbers with commas and appropriate decimals
+                            if (field.includes('AMOUNT') || field.includes('COST')) {
+                                displayValue = `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                            } else {
+                                displayValue = value.toLocaleString();
+                            }
+                        }
+                        
+                        // Clean up field name (remove \n)
+                        const fieldName = field.replace(/\\n/g, ' ');
+                        
+                        html += `
+                            <tr class="hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <td class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 font-medium">${fieldName}</td>
+                                <td class="px-4 py-2 text-sm text-right text-gray-900 dark:text-white">${displayValue}</td>
                             </tr>
                         `;
                     });
@@ -1071,6 +1169,7 @@
                     const stepDiv = document.getElementById(`step${i}`);
                     if (stepDiv) {
                         stepDiv.classList.add('hidden');
+                        stepDiv.style.display = 'none';
                     }
                 }
                 
@@ -1078,6 +1177,7 @@
                 const currentStepDiv = document.getElementById(`step${step}`);
                 if (currentStepDiv) {
                     currentStepDiv.classList.remove('hidden');
+                    currentStepDiv.style.display = 'block';
                 }
                 
                 currentStep = step;
@@ -1308,61 +1408,109 @@
                 console.error('❌ Could not find soldFile input or soldFileName element');
             }
             
+            // Store selected supplier files in an array
+            let selectedOrderedFiles = [];
             const orderedFilesInput = document.getElementById('orderedFiles');
             const orderedFileName = document.getElementById('orderedFileName');
             const orderedFilesLabel = orderedFilesInput?.closest('label');
+            const orderedFilesList = document.getElementById('orderedFilesList');
+            
+            // Function to update the files list display
+            function updateOrderedFilesDisplay() {
+                if (!orderedFilesList) return;
+                
+                if (selectedOrderedFiles.length === 0) {
+                    orderedFilesList.innerHTML = '';
+                    orderedFileName.textContent = 'No files chosen';
+                    orderedFileName.classList.remove('text-green-600', 'dark:text-green-400');
+                    orderedFileName.classList.add('text-slate-400');
+                    
+                    if (orderedFilesLabel) {
+                        orderedFilesLabel.classList.remove('border-teal-500', 'bg-teal-50', 'dark:bg-teal-900/20');
+                        orderedFilesLabel.classList.add('border-slate-300', 'dark:border-slate-600');
+                    }
+                    return;
+                }
+                
+                // Calculate total size
+                let totalSize = 0;
+                selectedOrderedFiles.forEach(file => {
+                    totalSize += file.size;
+                });
+                const totalSizeKB = (totalSize / 1024).toFixed(2);
+                const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+                const sizeDisplay = totalSize > 1024 * 1024 ? `${totalSizeMB} MB` : `${totalSizeKB} KB`;
+                
+                // Update summary text
+                orderedFileName.textContent = `✓ ${selectedOrderedFiles.length} file${selectedOrderedFiles.length > 1 ? 's' : ''} selected (${sizeDisplay})`;
+                orderedFileName.classList.add('text-green-600', 'dark:text-green-400');
+                orderedFileName.classList.remove('text-slate-400');
+                
+                // Visual feedback on label
+                if (orderedFilesLabel) {
+                    orderedFilesLabel.classList.add('border-teal-500', 'bg-teal-50', 'dark:bg-teal-900/20');
+                    orderedFilesLabel.classList.remove('border-slate-300', 'dark:border-slate-600');
+                }
+                
+                // Display files with delete buttons
+                orderedFilesList.innerHTML = selectedOrderedFiles.map((file, index) => {
+                    const fileSizeKB = (file.size / 1024).toFixed(2);
+                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    const fileSizeDisplay = file.size > 1024 * 1024 ? `${fileSizeMB} MB` : `${fileSizeKB} KB`;
+                    
+                    return `
+                        <div class="flex items-center justify-between p-2 bg-white dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700 group hover:border-teal-500 dark:hover:border-teal-500 transition-colors">
+                            <div class="flex items-center gap-2 flex-1 min-w-0">
+                                <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 text-sm flex-shrink-0">description</span>
+                                <span class="text-xs text-slate-700 dark:text-slate-300 truncate flex-1" title="${file.name}">${file.name}</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">${fileSizeDisplay}</span>
+                            </div>
+                            <button type="button" onclick="removeOrderedFile(${index})" class="ml-2 p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex-shrink-0" title="Remove file">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Function to remove a file from the list
+            window.removeOrderedFile = function(index) {
+                if (index >= 0 && index < selectedOrderedFiles.length) {
+                    selectedOrderedFiles.splice(index, 1);
+                    updateOrderedFilesDisplay();
+                }
+            };
             
             console.log('🔍 Looking for supplier file inputs:', {
                 orderedFilesInput: !!orderedFilesInput,
                 orderedFileName: !!orderedFileName,
-                orderedFilesLabel: !!orderedFilesLabel
+                orderedFilesLabel: !!orderedFilesLabel,
+                orderedFilesList: !!orderedFilesList
             });
             
             if (orderedFilesInput && orderedFileName) {
-                // Add multiple event listeners for debugging
-                orderedFilesInput.addEventListener('click', function(e) {
-                    console.log('🖱️ Supplier file input clicked');
-                    e.stopPropagation();
-                });
-                
-                orderedFilesInput.addEventListener('focus', function(e) {
-                    console.log('👁️ Supplier file input focused');
-                });
-                
                 orderedFilesInput.addEventListener('change', function(e) {
                     console.log('📁 Supplier files change event fired');
                     console.log('📁 Files:', e.target.files);
                     console.log('📁 Files length:', e.target.files ? e.target.files.length : 0);
                     
                     if (e.target.files && e.target.files.length > 0) {
-                        const fileCount = e.target.files.length;
-                        let totalSize = 0;
-                        let fileNames = [];
+                        // Add new files to the array (append, don't replace)
                         for (let i = 0; i < e.target.files.length; i++) {
-                            totalSize += e.target.files[i].size;
-                            fileNames.push(e.target.files[i].name);
-                        }
-                        const totalSizeKB = (totalSize / 1024).toFixed(2);
-                        orderedFileName.textContent = `✓ ${fileCount} file${fileCount > 1 ? 's' : ''} selected (${totalSizeKB} KB)`;
-                        orderedFileName.classList.add('text-green-600', 'dark:text-green-400');
-                        orderedFileName.classList.remove('text-slate-400');
-                        
-                        // Visual feedback on label
-                        if (orderedFilesLabel) {
-                            orderedFilesLabel.classList.add('border-teal-500', 'bg-teal-50', 'dark:bg-teal-900/20');
-                            orderedFilesLabel.classList.remove('border-slate-300', 'dark:border-slate-600');
+                            const file = e.target.files[i];
+                            // Check if file already exists (by name and size to avoid duplicates)
+                            const exists = selectedOrderedFiles.some(f => 
+                                f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
+                            );
+                            if (!exists) {
+                                selectedOrderedFiles.push(file);
+                            }
                         }
                         
-                        console.log('📋 Files:', fileNames);
-                    } else {
-                        orderedFileName.textContent = 'No files chosen';
-                        orderedFileName.classList.remove('text-green-600', 'dark:text-green-400');
-                        orderedFileName.classList.add('text-slate-400');
+                        updateOrderedFilesDisplay();
                         
-                        if (orderedFilesLabel) {
-                            orderedFilesLabel.classList.remove('border-teal-500', 'bg-teal-50', 'dark:bg-teal-900/20');
-                            orderedFilesLabel.classList.add('border-slate-300', 'dark:border-slate-600');
-                        }
+                        // Clear the input so it can be used again to add more files
+                        e.target.value = '';
                     }
                 });
                 console.log('✅ Supplier files handler attached');
@@ -1382,14 +1530,13 @@
             
             const formData = new FormData();
             
-            // Append all ordered files (suppliers)
-            const orderedFiles = document.getElementById('orderedFiles').files;
-            if (orderedFiles.length === 0) {
+            // Append all ordered files (suppliers) from the stored array
+            if (selectedOrderedFiles.length === 0) {
                 showStatus('Please select at least one supplier file', 'error');
                 return;
             }
-            for (let i = 0; i < orderedFiles.length; i++) {
-                formData.append('ordered_files', orderedFiles[i]);
+            for (let i = 0; i < selectedOrderedFiles.length; i++) {
+                formData.append('ordered_files', selectedOrderedFiles[i]);
             }
             
             // Append single inventory report (sold file)
@@ -1604,9 +1751,9 @@
                 
                 // Use the data directly from the response (no need to fetch again)
                 console.log('📥 Using data from report generation response:', {
-                    has_batchrx_report: !!runData.batchrx_report,
-                    batchrx_row_count: runData.batchrx_row_count,
-                    batchrx_columns_count: runData.batchrx_columns?.length || 0
+                    has_dawairx_report: !!runData.dawairx_report,
+                    dawairx_row_count: runData.dawairx_row_count,
+                    dawairx_columns_count: runData.dawairx_columns?.length || 0
                 });
                 
                 // Construct run data for display
@@ -1614,16 +1761,18 @@
                     success: true,
                     run_id: runId,
                     summary: runData.summary || {},
-                    batchrx_report: runData.batchrx_report || [],
-                    batchrx_row_count: runData.batchrx_row_count || 0,
-                    batchrx_columns: runData.batchrx_columns || []
+                    dawairx_report: runData.dawairx_report || [],
+                    dawairx_row_count: runData.dawairx_row_count || 0,
+                    dawairx_columns: runData.dawairx_columns || [],
+                    is_no_data: runData.is_no_data || false,  // Include is_no_data flag
+                    dawairx_error: runData.dawairx_error || null  // Include error message
                 };
                 
                 console.log('📊 Prepared run data for display:', {
                     run_id: runId,
-                    has_batchrx: !!displayData.batchrx_report,
-                    batchrx_rows: displayData.batchrx_row_count,
-                    batchrx_columns: displayData.batchrx_columns.length
+                    has_dawairx: !!displayData.dawairx_report,
+                    dawairx_rows: displayData.dawairx_row_count,
+                    dawairx_columns: displayData.dawairx_columns.length
                 });
                 
                 // Ensure all required elements exist before calling displayResults
@@ -1709,64 +1858,109 @@
             console.log('🔑 Using run ID for downloads:', runId, '(run_id:', data.run_id, ', saved_run_id:', data.saved_run_id, ')');
             
             // Store original data for sorting
-            if (runId && data.batchrx_report && data.batchrx_columns) {
+            if (runId && data.dawairx_report && data.dawairx_columns) {
                 window.reportDataStore = window.reportDataStore || {};
                 window.reportDataStore[runId] = {
-                    original: JSON.parse(JSON.stringify(data.batchrx_report)),
-                    columns: data.batchrx_columns,
-                    sorted: JSON.parse(JSON.stringify(data.batchrx_report)),
+                    original: JSON.parse(JSON.stringify(data.dawairx_report)),
+                    columns: data.dawairx_columns,
+                    sorted: JSON.parse(JSON.stringify(data.dawairx_report)),
                     sortColumn: null,
                     sortDirection: 'none'
                 };
             }
             
-            console.log('📋 BatchRx report data:', {
-                has_batchrx_report: !!data.batchrx_report,
-                batchrx_report_type: typeof data.batchrx_report,
-                batchrx_report_is_array: Array.isArray(data.batchrx_report),
-                batchrx_report_length: data.batchrx_report ? (Array.isArray(data.batchrx_report) ? data.batchrx_report.length : 'not array') : 0,
-                batchrx_columns: data.batchrx_columns,
-                batchrx_row_count: data.batchrx_row_count,
+            console.log('📋 DawaiRx report data:', {
+                has_dawairx_report: !!data.dawairx_report,
+                dawairx_report_type: typeof data.dawairx_report,
+                dawairx_report_is_array: Array.isArray(data.dawairx_report),
+                dawairx_report_length: data.dawairx_report ? (Array.isArray(data.dawairx_report) ? data.dawairx_report.length : 'not array') : 0,
+                dawairx_columns: data.dawairx_columns,
+                dawairx_row_count: data.dawairx_row_count,
                 full_data_keys: Object.keys(data)
             });
             
-            // Log the actual batchrx_report value
-            if (data.batchrx_report) {
-                console.log('📊 BatchRx report sample (first item):', data.batchrx_report[0]);
+            // Log the actual dawairx_report value
+            if (data.dawairx_report) {
+                console.log('📊 DawaiRx report sample (first item):', data.dawairx_report[0]);
             }
             
-            // Display BatchRx report table
+            // Display DawaiRx report table
             const dataTablesDiv = document.getElementById('dataTables');
             let tablesHTML = '';
             
-            // Check if batchrx_report exists and is a non-empty array
-            const hasBatchRxData = data.batchrx_report && 
-                                   Array.isArray(data.batchrx_report) && 
-                                   data.batchrx_report.length > 0;
+            // Check if this is a "no data" scenario FIRST (before checking if report exists)
+            const isNoData = data.is_no_data === true;
             
-            console.log('🔍 BatchRx data check:', {
-                hasBatchRxData: hasBatchRxData,
-                batchrx_report_exists: !!data.batchrx_report,
-                is_array: Array.isArray(data.batchrx_report),
-                length: data.batchrx_report ? data.batchrx_report.length : 0
+            // Check if dawairx_report exists and is a non-empty array
+            const hasDawaiRxData = data.dawairx_report && 
+                                   Array.isArray(data.dawairx_report) && 
+                                   data.dawairx_report.length > 0;
+            
+            console.log('🔍 DawaiRx data check:', {
+                hasDawaiRxData: hasDawaiRxData,
+                dawairx_report_exists: !!data.dawairx_report,
+                is_array: Array.isArray(data.dawairx_report),
+                length: data.dawairx_report ? data.dawairx_report.length : 0,
+                is_no_data: data.is_no_data,
+                isNoData: isNoData
             });
             
-            if (hasBatchRxData) {
-                console.log('✅ Rendering BatchRx table with', data.batchrx_report.length, 'rows');
+            // If it's a "no data" scenario, show friendly message (not error) - CHECK THIS FIRST
+            if (isNoData) {
+                    const message = data.dawairx_error || 'No data available for this report.';
+                    
+                    // Determine if it's a date range issue
+                    const isDateRangeIssue = message.includes('date range') || message.includes('date filter') || message.includes('date');
+                    
+                    // Clean up the message to be more user-friendly
+                    let friendlyMessage = message;
+                    let heading = 'No Data Found';
+                    if (isDateRangeIssue) {
+                        heading = 'No Data Found for Selected Period';
+                        friendlyMessage = 'We couldn\'t find any pharmacy data matches for the dates provided. Please check your uploaded reports or try a different date range.';
+                    } else if (message.includes('No data available')) {
+                        friendlyMessage = 'We couldn\'t find any pharmacy data matches. Please check your uploaded reports.';
+                    } else if (message.includes('No sales data')) {
+                        friendlyMessage = 'No sales data found. The report was generated successfully but contains no medicines with sales.';
+                    }
+                    
+                    tablesHTML = `
+                        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden p-16 text-center max-w-2xl mx-auto">
+                            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 mb-8 relative">
+                                <span class="material-symbols-outlined text-6xl">description</span>
+                                <span class="material-symbols-outlined text-2xl absolute -bottom-1 -right-1 bg-white dark:bg-gray-900 rounded-full p-1.5 border-2 border-white dark:border-gray-800 text-gray-500 dark:text-gray-400" style="font-size: 1.5rem;">search</span>
+                            </div>
+                            <h3 class="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-5">${heading}</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-10 text-lg max-w-lg mx-auto leading-relaxed">${friendlyMessage}</p>
+                            <div class="mb-8">
+                                <p class="text-xs text-gray-400 dark:text-gray-500 font-mono tracking-wider">
+                                    <span class="font-semibold text-gray-500 dark:text-gray-400">RUN ID:</span> ${runId}
+                                </p>
+                            </div>
+                            ${isDateRangeIssue ? `
+                                <a href="/new-report" class="inline-flex items-center gap-2 px-6 py-3 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg">
+                                    <span>Adjust date range</span>
+                                    <span class="material-symbols-outlined text-xl">calendar_today</span>
+                                </a>
+                            ` : ''}
+                        </div>
+                    `;
+                } else if (hasDawaiRxData) {
+                console.log('✅ Rendering DawaiRx table with', data.dawairx_report.length, 'rows');
                 
                 // Count actual rows with RANK (exclude rows without ranks)
-                const rankColumn = data.batchrx_columns?.find(col => col.includes('RANK')) || 'RANK';
-                const actualRowCount = data.batchrx_report.filter(row => {
+                const rankColumn = data.dawairx_columns?.find(col => col.includes('RANK')) || 'RANK';
+                const actualRowCount = data.dawairx_report.filter(row => {
                     const rankValue = row[rankColumn];
                     return rankValue !== null && rankValue !== undefined && rankValue !== '' && !isNaN(rankValue);
                 }).length;
                 
                 // Use actual count of rows with ranks, fallback to array length
-                const rowCount = actualRowCount > 0 ? actualRowCount : data.batchrx_report.length;
-                const columns = data.batchrx_columns || Object.keys(data.batchrx_report[0]);
+                const rowCount = actualRowCount > 0 ? actualRowCount : data.dawairx_report.length;
+                const columns = data.dawairx_columns || Object.keys(data.dawairx_report[0]);
                 console.log('📊 Table columns:', columns.length, 'columns');
-                console.log('📊 Table rows:', data.batchrx_report.length, 'rows');
-                console.log('📊 First row sample:', data.batchrx_report[0]);
+                console.log('📊 Table rows:', data.dawairx_report.length, 'rows');
+                console.log('📊 First row sample:', data.dawairx_report[0]);
                 
                 // Format date range for display
                 const formatDateRange = (dateFrom, dateTo) => {
@@ -1774,8 +1968,20 @@
                     const formatDate = (dateStr) => {
                         if (!dateStr) return '';
                         try {
-                            const date = new Date(dateStr);
-                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                            // If date is in YYYY-MM-DD format, parse as local date (not UTC)
+                            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                const [year, month, day] = dateStr.split('-').map(Number);
+                                // Create date in local timezone (month is 0-indexed in JavaScript Date)
+                                const date = new Date(year, month - 1, day);
+                                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                            } else {
+                                // For other formats, try to parse but be careful with timezone
+                                const date = new Date(dateStr);
+                                if (isNaN(date.getTime())) {
+                                    return dateStr;
+                                }
+                                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                            }
                         } catch (e) {
                             return dateStr;
                         }
@@ -1798,9 +2004,9 @@
                 const dateRangeStr = formatDateRange(dateFrom, dateTo);
                 
                 tablesHTML += `
-                    <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full">
                         <!-- Search Section -->
-                        <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+                        <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
                             <!-- Search Input -->
                             <div class="mb-4">
                                 <div class="relative">
@@ -1814,7 +2020,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="overflow-x-auto overflow-y-auto" style="max-height: calc(100vh - 400px); position: relative;" id="tableContainer">
+                        <div class="overflow-x-auto overflow-y-auto flex-1 min-h-0" id="tableContainer">
                             <table class="w-full text-left text-sm border-collapse" style="min-width: 100%;">
                                 <thead style="position: sticky; top: 0; z-index: 30; background-color: rgb(249 250 251);" class="dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-100 dark:border-gray-800">
                                     <tr>
@@ -1908,18 +2114,26 @@
                 // Use sorted data if available, otherwise use original
                 const dataToRender = (runId && window.reportDataStore && window.reportDataStore[runId] && window.reportDataStore[runId].sorted) 
                     ? window.reportDataStore[runId].sorted 
-                    : data.batchrx_report;
+                    : data.dawairx_report;
                 
                 dataToRender.forEach((row) => {
                     // Get drug name for search filtering (column 1 is typically DRUG NAME)
                     const drugNameCol = columns.find(col => col.toLowerCase().includes('drug') && col.toLowerCase().includes('name')) || columns[1];
                     const drugName = (row[drugNameCol] || '').toString().toLowerCase();
-                    tablesHTML += `<tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors" data-drug-name="${drugName}" onclick="event.stopPropagation();">`;
+                    
+                    // Get medicine identifier for row click
+                    const ndcCol = columns.find(col => col.toLowerCase().includes('ndc')) || columns[0];
+                    const ndcValue = row[ndcCol] || '';
+                    const medicineIdentifier = ndcValue || row[drugNameCol] || '';
+                    const safeIdentifier = String(medicineIdentifier).replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ').replace(/\r/g, '');
+                    
+                    // Make entire row clickable
+                    tablesHTML += `<tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer medicine-row" data-drug-name="${drugName}" data-run-id="${runId}" data-medicine-id="${safeIdentifier}">`;
                     columns.forEach((col, index) => {
                         let value = row[col] !== undefined && row[col] !== null ? row[col] : '';
                         const colName = col.replace(/\\n/g, ' ');
                         
-                        // Show blank for 0 values (match BatchRX)
+                        // Show blank for 0 values (match DawaiRx)
                         if (value === 0 || value === '0' || value === 0.0) {
                             value = '';
                         }
@@ -1945,17 +2159,6 @@
                             // Second column (DRUG NAME) - sticky at left:120px (match header positioning)
                             stickyClass = 'bg-white dark:bg-gray-900';
                             stickyStyle = 'position: sticky; left: 120px; z-index: 20; min-width: 200px; box-shadow: 2px 0 4px rgba(0,0,0,0.1);';
-                            // Make drug name clickable
-                            const ndcCol = columns.find(col => col.toLowerCase().includes('ndc')) || columns[0];
-                            const ndcValue = row[ndcCol] || '';
-                            // Get drug name column if not already defined
-                            const currentDrugNameCol = drugNameCol || columns.find(col => col.toLowerCase().includes('drug') && col.toLowerCase().includes('name')) || columns[1];
-                            const medicineIdentifier = ndcValue || row[currentDrugNameCol] || value || '';
-                            // Escape quotes and special characters for JavaScript
-                            const safeIdentifier = String(medicineIdentifier).replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ').replace(/\r/g, '');
-                            const safeValue = String(value).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                            value = `<span class="text-primary hover:underline cursor-pointer font-medium medicine-detail-link" data-run-id="${runId}" data-medicine-id="${safeIdentifier}">${safeValue}</span>`;
-                            console.log('🔗 Made medicine clickable:', safeValue, 'with ID:', safeIdentifier);
                         }
                         tablesHTML += `<td class="px-3 py-2 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap ${stickyClass}" style="${stickyStyle}">${value}</td>`;
                     });
@@ -1970,77 +2173,180 @@
                 
                 // Footer with medicine count
                 tablesHTML += `
-                    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Showing ${rowCount} medicines.</p>
+                    <div class="px-6 py-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between flex-shrink-0">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Showing ${rowCount} medicines.</p>
                     </div>
                 `;
                 
                 tablesHTML += '</div>';
             } else {
-                console.error('❌ No BatchRx report data available - BatchRx report generation may have failed');
-                console.log('📋 Available data keys:', Object.keys(data));
-                console.log('📊 Check server logs for BatchRx report generation errors');
+                // Check if this is a "no data" scenario (not an error)
+                const isNoData = data.is_no_data === true;
+                const message = data.dawairx_error || 'No data available for this report.';
                 
-                // Show error message
-                tablesHTML = `
-                    <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-red-200 dark:border-red-800 overflow-hidden p-8 text-center">
-                        <div class="inline-flex items-center justify-center size-16 rounded-full bg-red-100 text-red-600 mb-4">
-                            <span class="material-symbols-outlined text-4xl">error</span>
+                if (isNoData) {
+                    // Show friendly "no data" message (not an error)
+                    console.log('ℹ️ No data available for this report');
+                    
+                    // Determine if it's a date range issue
+                    const isDateRangeIssue = message.includes('date range') || message.includes('date filter') || message.includes('date');
+                    
+                    // Clean up the message to be more user-friendly
+                    let friendlyMessage = message;
+                    let heading = 'No Data Found';
+                    if (isDateRangeIssue) {
+                        heading = 'No Data Found for Selected Period';
+                        friendlyMessage = 'We couldn\'t find any pharmacy data matches for the dates provided. Please check your uploaded reports or try a different date range.';
+                    } else if (message.includes('No data available')) {
+                        friendlyMessage = 'We couldn\'t find any pharmacy data matches. Please check your uploaded reports.';
+                    } else if (message.includes('No sales data')) {
+                        friendlyMessage = 'No sales data found. The report was generated successfully but contains no medicines with sales.';
+                    }
+                    
+                    tablesHTML = `
+                        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden p-16 text-center max-w-2xl mx-auto">
+                            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 mb-8 relative">
+                                <span class="material-symbols-outlined text-6xl">description</span>
+                                <span class="material-symbols-outlined text-2xl absolute -bottom-1 -right-1 bg-white dark:bg-gray-900 rounded-full p-1.5 border-2 border-white dark:border-gray-800 text-gray-500 dark:text-gray-400" style="font-size: 1.5rem;">search</span>
+                            </div>
+                            <h3 class="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-5">${heading}</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-10 text-lg max-w-lg mx-auto leading-relaxed">${friendlyMessage}</p>
+                            <div class="mb-8">
+                                <p class="text-xs text-gray-400 dark:text-gray-500 font-mono tracking-wider">
+                                    <span class="font-semibold text-gray-500 dark:text-gray-400">RUN ID:</span> ${runId}
+                                </p>
+                            </div>
+                            ${isDateRangeIssue ? `
+                                <a href="/new-report" class="inline-flex items-center gap-2 px-6 py-3 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg">
+                                    <span>Adjust date range</span>
+                                    <span class="material-symbols-outlined text-xl">calendar_today</span>
+                                </a>
+                            ` : ''}
                         </div>
-                        <h3 class="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">BatchRx Report Generation Failed</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">The inventory report could not be generated. Please check the server logs for details.</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Run ID: ${runId}</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">You can still download the CSV report if it was generated successfully.</p>
-                    </div>
-                `;
+                    `;
+                } else {
+                    // Show error message for actual failures
+                    console.error('❌ No DawaiRx report data available - DawaiRx report generation may have failed');
+                    console.log('📋 Available data keys:', Object.keys(data));
+                    console.log('📊 Check server logs for DawaiRx report generation errors');
+                    
+                    const errorMessage = message;
+                    
+                    tablesHTML = `
+                        <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-red-200 dark:border-red-800 overflow-hidden p-8 text-center">
+                            <div class="inline-flex items-center justify-center size-16 rounded-full bg-red-100 text-red-600 mb-4">
+                                <span class="material-symbols-outlined text-4xl">error</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">DawaiRx Report Generation Failed</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-2">The inventory report could not be generated.</p>
+                            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mt-4 mb-4 text-left">
+                                <p class="text-sm font-medium text-red-800 dark:text-red-300 mb-1">Error Details:</p>
+                                <p class="text-xs text-red-700 dark:text-red-400 font-mono break-words">${errorMessage}</p>
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Run ID: ${runId}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">You can still download the CSV report if it was generated successfully.</p>
+                        </div>
+                    `;
+                }
             }
             
-            // Update page heading with report name and date range if available
-            const pageHeading = document.getElementById('pageHeading');
-            const reportDateInfo = document.getElementById('reportDateInfo');
-            if (pageHeading && reportDateInfo) {
+            // Update report header with name, date range, and generated date
+            const reportHeaderName = document.getElementById('reportHeaderName');
+            const reportDateRange = document.getElementById('reportDateRange');
+            const reportGeneratedDate = document.getElementById('reportGeneratedDate');
+            
+            if (reportHeaderName) {
                 const runData = data.run || {};
                 const configSummary = runData.config_summary || {};
                 const reportName = configSummary.report_name || '';
+                if (reportName) {
+                    reportHeaderName.textContent = reportName;
+                } else {
+                    // Fallback to run_id date
+                    const formatRunId = (runId) => {
+                        if (runId && runId.length >= 8) {
+                            const dateStr = runId.substring(0, 8);
+                            const year = dateStr.substring(0, 4);
+                            const month = dateStr.substring(4, 6);
+                            const day = dateStr.substring(6, 8);
+                            const date = new Date(`${year}-${month}-${day}`);
+                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        }
+                        return runId;
+                    };
+                    reportHeaderName.textContent = formatRunId(runId);
+                }
+            }
+            
+            // Update date range
+            if (reportDateRange) {
+                const runData = data.run || {};
+                const configSummary = runData.config_summary || {};
                 const dateFrom = configSummary.date_from || '';
                 const dateTo = configSummary.date_to || '';
                 
-                // Format date range
-                function formatDateRange(dateFrom, dateTo) {
-                    if (!dateFrom && !dateTo) return '';
-                    const formatDate = (dateStr) => {
-                        if (!dateStr) return '';
-                        try {
-                            const date = new Date(dateStr);
+                const formatDateForHeader = (dateStr) => {
+                    if (!dateStr) return '';
+                    try {
+                        // If date is in YYYY-MM-DD format, parse as local date (not UTC)
+                        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                            const [year, month, day] = dateStr.split('-').map(Number);
+                            // Create date in local timezone (month is 0-indexed in JavaScript Date)
+                            const date = new Date(year, month - 1, day);
                             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                        } catch (e) {
-                            return dateStr;
+                        } else {
+                            // For other formats, try to parse but be careful with timezone
+                            const date = new Date(dateStr);
+                            if (isNaN(date.getTime())) {
+                                return dateStr;
+                            }
+                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                         }
-                    };
-                    if (dateFrom && dateTo) {
-                        return `${formatDate(dateFrom)} - ${formatDate(dateTo)}`;
-                    } else if (dateFrom) {
-                        return `From ${formatDate(dateFrom)}`;
-                    } else if (dateTo) {
-                        return `Until ${formatDate(dateTo)}`;
+                    } catch (e) {
+                        return dateStr;
                     }
-                    return '';
+                };
+                
+                if (dateFrom && dateTo) {
+                    reportDateRange.textContent = `${formatDateForHeader(dateFrom)} - ${formatDateForHeader(dateTo)}`;
+                } else if (dateFrom) {
+                    reportDateRange.textContent = `From ${formatDateForHeader(dateFrom)}`;
+                } else if (dateTo) {
+                    reportDateRange.textContent = `Until ${formatDateForHeader(dateTo)}`;
+                } else {
+                    reportDateRange.textContent = '';
                 }
+            }
+            
+            // Update generated date
+            if (reportGeneratedDate) {
+                const runData = data.run || {};
+                const createdAt = runData.created_at || runData.timestamp || '';
                 
-                const dateRangeStr = formatDateRange(dateFrom, dateTo);
-                
-                // Update heading with report name if available
-                if (reportName) {
-                    const headingTitle = pageHeading.querySelector('h2');
-                    if (headingTitle) {
-                        headingTitle.textContent = reportName;
+                const formatGeneratedDate = (dateStr) => {
+                    if (!dateStr) {
+                        // Fallback to current date if no timestamp available
+                        return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                     }
-                }
+                    try {
+                        const date = new Date(dateStr);
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    } catch (e) {
+                        // Try to extract from run_id if it's in format YYYYMMDD_HHMMSS
+                        if (runId && runId.length >= 8) {
+                            const dateStr = runId.substring(0, 8);
+                            const year = dateStr.substring(0, 4);
+                            const month = dateStr.substring(4, 6);
+                            const day = dateStr.substring(6, 8);
+                            const date = new Date(`${year}-${month}-${day}`);
+                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        }
+                        return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    }
+                };
                 
-                // Update date info with date range or generated date
-                if (dateRangeStr) {
-                    reportDateInfo.textContent = dateRangeStr;
-                }
+                const generatedDateStr = formatGeneratedDate(createdAt);
+                reportGeneratedDate.textContent = `Generated on: ${generatedDateStr}`;
             }
             
             // Store original data for sorting
@@ -2050,11 +2356,11 @@
             const reportRunId = data.run_id || (window.location.search ? new URLSearchParams(window.location.search).get('run_id') : null);
             if (reportRunId) {
                 // Get columns from data (they're defined inside the if block above)
-                const columnsForStorage = data.batchrx_columns || (data.batchrx_report && data.batchrx_report.length > 0 ? Object.keys(data.batchrx_report[0]) : []);
+                const columnsForStorage = data.dawairx_columns || (data.dawairx_report && data.dawairx_report.length > 0 ? Object.keys(data.dawairx_report[0]) : []);
                 window.reportData[reportRunId] = {
-                    original: JSON.parse(JSON.stringify(data.batchrx_report || [])),
+                    original: JSON.parse(JSON.stringify(data.dawairx_report || [])),
                     columns: columnsForStorage,
-                    sorted: JSON.parse(JSON.stringify(data.batchrx_report || [])),
+                    sorted: JSON.parse(JSON.stringify(data.dawairx_report || [])),
                     sortColumn: null,
                     sortDirection: 'none'
                 };
@@ -2064,24 +2370,28 @@
                 dataTablesDiv.innerHTML = tablesHTML;
                 console.log('✅ Table HTML inserted into dataTables div');
                 
-                // Attach click handlers to medicine detail links using event delegation
+                // Attach click handlers to medicine rows using event delegation
                 // Use document-level delegation to handle clicks even after innerHTML changes
                 if (!window.medicineDetailHandlerAttached) {
                     // Use capture phase to catch clicks early
                     document.addEventListener('click', function(e) {
-                        // Check if clicked element or its parent has the medicine-detail-link class
-                        let link = e.target.closest('.medicine-detail-link');
-                        // Also check if the clicked element itself is the link
-                        if (!link && e.target.classList && e.target.classList.contains('medicine-detail-link')) {
-                            link = e.target;
+                        // Check if clicked element or its parent is a medicine row
+                        let row = e.target.closest('.medicine-row');
+                        // Also check if the clicked element itself is the row
+                        if (!row && e.target.classList && e.target.classList.contains('medicine-row')) {
+                            row = e.target;
                         }
-                        if (link) {
-                            console.log('✅ Found medicine-detail-link!');
+                        // If clicked on a table cell, get the parent row
+                        if (!row && e.target.tagName === 'TD') {
+                            row = e.target.closest('tr.medicine-row');
+                        }
+                        if (row) {
+                            console.log('✅ Found medicine row!');
                             e.stopPropagation();
                             e.preventDefault();
-                            const runId = link.getAttribute('data-run-id');
-                            const medicineId = link.getAttribute('data-medicine-id');
-                            console.log('🔍 Medicine link clicked:', runId, medicineId);
+                            const runId = row.getAttribute('data-run-id');
+                            const medicineId = row.getAttribute('data-medicine-id');
+                            console.log('🔍 Medicine row clicked:', runId, medicineId);
                             if (runId && medicineId) {
                                 if (window.showMedicineDetails) {
                                     console.log('✅ Calling showMedicineDetails...');
@@ -2097,7 +2407,7 @@
                         }
                     }, true); // Use capture phase
                     window.medicineDetailHandlerAttached = true;
-                    console.log('✅ Document-level medicine detail handler attached (capture phase)');
+                    console.log('✅ Document-level medicine row handler attached (capture phase)');
                 }
                 
                 // Add search functionality after table is rendered
@@ -2111,7 +2421,7 @@
                         const configSummary = runData.config_summary || {};
                         const dateFrom = configSummary.date_from || '';
                         const dateTo = configSummary.date_to || '';
-                        const originalCount = data.batchrx_row_count || data.batchrx_report.length;
+                        const originalCount = data.dawairx_row_count || data.dawairx_report.length;
                         
                         // Format date range function
                         function formatDateRange(dateFrom, dateTo) {
@@ -2168,24 +2478,53 @@
                 console.error('❌ dataTables div not found!');
             }
             
-            // Display download links with JavaScript handlers for authentication
+            // Display download dropdown button in report header
             const downloadLinksDiv = document.getElementById('downloadLinks');
             if (downloadLinksDiv) {
                 downloadLinksDiv.innerHTML = `
-                <button onclick="downloadFile('${runId}', 'inventory_report')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200/50 dark:border-gray-700/50 bg-surface-light dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-xs font-medium transition-all cursor-pointer">
-                    <span class="material-symbols-outlined text-sm">download</span>
-                    CSV
-                </button>
-                <button onclick="downloadFile('${runId}', 'audit_report_detailed')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200/50 dark:border-gray-700/50 bg-surface-light dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-xs font-medium transition-all cursor-pointer">
-                    <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
-                    PDF
-                </button>
-                <button onclick="downloadFile('${runId}', 'audit_report')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200/50 dark:border-gray-700/50 bg-surface-light dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-xs font-medium transition-all cursor-pointer">
-                    <span class="material-symbols-outlined text-sm">table_chart</span>
-                    Excel
-                </button>
-            `;
-                console.log('✅ Download links inserted');
+                <div class="relative inline-block">
+                    <button id="downloadDropdownBtn" class="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-200/50 dark:border-gray-700/50 bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-base">download</span>
+                        <span>Download</span>
+                        <span class="material-symbols-outlined text-base">arrow_drop_down</span>
+                    </button>
+                    <div id="downloadDropdown" class="hidden absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                        <div class="py-1">
+                            <a href="#" onclick="downloadFile('${runId}', 'inventory_report'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">description</span>
+                                <span>CSV</span>
+                            </a>
+                            <a href="#" onclick="downloadFile('${runId}', 'audit_report_detailed'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">picture_as_pdf</span>
+                                <span>PDF</span>
+                            </a>
+                            <a href="#" onclick="downloadFile('${runId}', 'audit_report'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">table_chart</span>
+                                <span>Excel</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                // Add dropdown toggle functionality
+                const downloadBtn = document.getElementById('downloadDropdownBtn');
+                const downloadDropdown = document.getElementById('downloadDropdown');
+                if (downloadBtn && downloadDropdown) {
+                    downloadBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        downloadDropdown.classList.toggle('hidden');
+                    });
+                    
+                    // Close dropdown when clicking outside
+                    document.addEventListener('click', function(e) {
+                        if (!downloadBtn.contains(e.target) && !downloadDropdown.contains(e.target)) {
+                            downloadDropdown.classList.add('hidden');
+                        }
+                    });
+                }
+                
+                console.log('✅ Download dropdown inserted');
             } else {
                 console.error('❌ downloadLinks div not found!');
             }
@@ -2194,8 +2533,9 @@
             const resultsDiv = document.getElementById('results');
             if (resultsDiv) {
                 resultsDiv.classList.remove('hidden');
-                resultsDiv.style.display = 'block';
-                resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                resultsDiv.style.display = 'flex';
+                resultsDiv.style.flexDirection = 'column';
+                resultsDiv.style.minHeight = '0';
                 console.log('✅ Results section displayed');
             } else {
                 console.error('❌ Results div not found');
@@ -2307,6 +2647,7 @@
                 // Show step1 and indicators for new report
                 const step1 = document.getElementById('step1');
                 const stepIndicators = document.getElementById('stepIndicators');
+                const centeredContainer = document.getElementById('centeredContentContainer');
                 if (step1) {
                     step1.style.display = '';
                     step1.style.visibility = '';
@@ -2315,63 +2656,33 @@
                     stepIndicators.style.display = '';
                     stepIndicators.style.visibility = '';
                 }
+                if (centeredContainer) {
+                    centeredContainer.style.display = 'flex';
+                }
             }
             
             if (runId) {
             console.log('🔍 Loading existing report with run_id:', runId);
             
-            // Update page heading to show we're viewing a report
+            // Hide page heading when viewing a report
             const pageHeading = document.getElementById('pageHeading');
             if (pageHeading) {
-                // Format run_id to a readable date format (e.g., 20260106_162526_192 -> Jan 6, 2026)
-                const formatRunId = (runId) => {
-                    // Extract date part (first 8 digits: YYYYMMDD)
-                    if (runId && runId.length >= 8) {
-                        const dateStr = runId.substring(0, 8);
-                        const year = dateStr.substring(0, 4);
-                        const month = dateStr.substring(4, 6);
-                        const day = dateStr.substring(6, 8);
-                        const date = new Date(`${year}-${month}-${day}`);
-                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                    }
-                    return runId;
-                };
-                
-                // Format date range function
-                function formatDateRange(dateFrom, dateTo) {
-                    if (!dateFrom && !dateTo) return '';
-                    const formatDate = (dateStr) => {
-                        if (!dateStr) return '';
-                        try {
-                            const date = new Date(dateStr);
-                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                        } catch (e) {
-                            return dateStr;
-                        }
-                    };
-                    if (dateFrom && dateTo) {
-                        return `${formatDate(dateFrom)} - ${formatDate(dateTo)}`;
-                    } else if (dateFrom) {
-                        return `From ${formatDate(dateFrom)}`;
-                    } else if (dateTo) {
-                        return `Until ${formatDate(dateTo)}`;
-                    }
-                    return '';
-                }
-                
-                // Get report name and date range from run data (will be loaded later)
-                // For now, show basic info - will be updated when data loads
-                pageHeading.innerHTML = `
-                    <h2 class="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
-                        Inventory Report
-                    </h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400" id="reportDateInfo">
-                        Generated on ${formatRunId(runId)}
-                    </p>
-                `;
-                
-                // Update heading with report name and date range when data loads
-                // This will be called from displayResults function
+                pageHeading.style.display = 'none';
+            }
+            
+            // Hide the centered content container when viewing a report
+            const centeredContainer = document.getElementById('centeredContentContainer');
+            if (centeredContainer) {
+                centeredContainer.style.setProperty('display', 'none', 'important');
+                centeredContainer.style.setProperty('height', '0', 'important');
+                centeredContainer.style.setProperty('overflow', 'hidden', 'important');
+            }
+            
+            // Show report header with name and download button
+            const reportHeader = document.getElementById('reportHeader');
+            if (reportHeader) {
+                reportHeader.classList.remove('hidden');
+                reportHeader.style.display = 'block';
             }
             
             // Hide all wizard steps when viewing an existing report
@@ -2428,10 +2739,12 @@
             
             if (resultsDiv) {
                 // Show results section but preserve the structure
-                resultsDiv.style.display = 'block';
+                resultsDiv.style.setProperty('display', 'flex', 'important');
+                resultsDiv.style.flexDirection = 'column';
+                resultsDiv.style.minHeight = '0';
                 resultsDiv.style.visibility = 'visible';
+                resultsDiv.style.height = 'auto';
                 resultsDiv.classList.remove('hidden');
-                resultsDiv.classList.add('block');
                 
                 // Get references to child elements BEFORE any innerHTML changes
                 const dataTablesDiv = document.getElementById('dataTables');
@@ -2495,26 +2808,34 @@
             .then(data => {
                 console.log('📥 Received run data:', {
                     has_run: !!data.run,
-                    has_batchrx_report: !!data.batchrx_report,
-                    batchrx_row_count: data.batchrx_row_count,
-                    batchrx_columns_count: data.batchrx_columns?.length || 0
+                    has_dawairx_report: !!data.dawairx_report,
+                    dawairx_row_count: data.dawairx_row_count,
+                    dawairx_columns_count: data.dawairx_columns?.length || 0
                 });
                 
                 if (data.run) {
-                    // Reconstruct the run data for display with BatchRx report
+                    // Reconstruct the run data for display with DawaiRx report
+                    // Infer is_no_data from report being empty (for existing runs that don't have this flag)
+                    const dawairxRowCount = data.dawairx_row_count || 0;
+                    const dawairxReportLength = (data.dawairx_report && Array.isArray(data.dawairx_report)) ? data.dawairx_report.length : 0;
+                    const inferredIsNoData = (dawairxRowCount === 0 && dawairxReportLength === 0);
+                    
                     const runData = {
                         success: true,
                         run_id: runId,
                         summary: data.run.stats || {},
-                        batchrx_report: data.batchrx_report || [],
-                        batchrx_row_count: data.batchrx_row_count || 0,
-                        batchrx_columns: data.batchrx_columns || []
+                        dawairx_report: data.dawairx_report || [],
+                        dawairx_row_count: data.dawairx_row_count || 0,
+                        dawairx_columns: data.dawairx_columns || [],
+                        is_no_data: data.is_no_data !== undefined ? data.is_no_data : inferredIsNoData,  // Use API value or infer from empty report
+                        dawairx_error: data.dawairx_error || null,  // Include error message
+                        run: data.run  // Include full run object so displayResults can access config_summary
                     };
                     console.log('📊 Loaded run data:', {
                         run_id: runId,
-                        has_batchrx: !!runData.batchrx_report,
-                        batchrx_rows: runData.batchrx_row_count,
-                        batchrx_columns: runData.batchrx_columns.length
+                        has_dawairx: !!runData.dawairx_report,
+                        dawairx_rows: runData.dawairx_row_count,
+                        dawairx_columns: runData.dawairx_columns.length
                     });
                     
                     // Ensure all required elements exist before calling displayResults
@@ -2620,39 +2941,70 @@
                 
                 const data = await response.json();
                 
-                // Update title
+                // Update title and NDC subtitle
+                const ndcDiv = document.getElementById('medicineDetailNDC');
                 if (titleDiv && data.medicine_key) {
                     const drugName = data.sold_entries[0]?.drug_name || data.ordered_entries[0]?.drug_name || medicineIdentifier;
                     titleDiv.textContent = drugName;
+                    
+                    // Add NDC as subtitle
+                    const ndc = data.sold_entries[0]?.ndc || data.ordered_entries[0]?.ndc || 'N/A';
+                    if (ndcDiv) {
+                        ndcDiv.textContent = `NDC: ${ndc}`;
+                    }
                 }
                 
-                // Format date
+                // Format date - parse as local date to avoid timezone shifts
                 function formatDate(dateStr) {
                     if (!dateStr) return 'N/A';
                     try {
-                        const date = new Date(dateStr);
-                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        // If date is in YYYY-MM-DD format, parse as local date (not UTC)
+                        // This is critical to avoid timezone shifts
+                        const yyyyMMddMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                        if (yyyyMMddMatch) {
+                            const year = parseInt(yyyyMMddMatch[1], 10);
+                            const month = parseInt(yyyyMMddMatch[2], 10);
+                            const day = parseInt(yyyyMMddMatch[3], 10);
+                            // Create date in local timezone (month is 0-indexed in JavaScript Date)
+                            const date = new Date(year, month - 1, day);
+                            // Verify the date is valid and matches what we expect
+                            if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
+                                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                            } else {
+                                // If date construction failed (e.g., invalid date), return formatted string
+                                return `${month}/${day}/${year}`;
+                            }
+                        } else {
+                            // For other formats, try to parse but be careful with timezone
+                            // First try to extract date parts if it looks like a date
+                            const dateMatch = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                            if (dateMatch) {
+                                const month = parseInt(dateMatch[1], 10);
+                                const day = parseInt(dateMatch[2], 10);
+                                const year = parseInt(dateMatch[3], 10);
+                                const date = new Date(year, month - 1, day);
+                                if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
+                                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                }
+                            }
+                            // Fallback: try standard Date parsing (but this might have timezone issues)
+                            const date = new Date(dateStr);
+                            // Check if date is valid
+                            if (isNaN(date.getTime())) {
+                                return dateStr;
+                            }
+                            // For dates parsed from strings, use UTC methods to avoid timezone shifts
+                            // But only if it's a valid date
+                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        }
                     } catch (e) {
                         return dateStr;
                     }
                 }
                 
-                // Build HTML
+                // Build HTML (Drug Information section removed - NDC is now in the title)
                 let html = `
                     <div class="space-y-6">
-                        <div>
-                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Drug Information</h4>
-                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">NDC:</span>
-                                    <span class="text-sm font-mono text-gray-900 dark:text-white">${data.sold_entries[0]?.ndc || data.ordered_entries[0]?.ndc || 'N/A'}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Medicine Key:</span>
-                                    <span class="text-xs font-mono text-gray-600 dark:text-gray-400">${data.medicine_key}</span>
-                                </div>
-                            </div>
-                        </div>
                 `;
                 
                 // Supplier entries (ordered)

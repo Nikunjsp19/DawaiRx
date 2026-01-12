@@ -7,12 +7,14 @@ from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import RequestValidationError
 from fastapi.security import HTTPBearer
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 import shutil
 from pathlib import Path
 import logging
 from typing import Optional, List
 import uuid
+import csv
 from datetime import datetime
 
 import pandas as pd
@@ -35,6 +37,15 @@ from src.auth.middleware import get_current_user_id
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="DawaiRx", description="Pharmacy Audit & Reconciliation Tool")
+
+# Add CORS middleware to allow access from anywhere (mobile, other laptops, etc.)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your domains
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Add compression middleware for faster responses
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -79,12 +90,13 @@ static_dir = Path(__file__).parent / "static"
 static_dir.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-# Temporary upload directory
-upload_dir = Path("uploads")
-upload_dir.mkdir(exist_ok=True)
+# Temporary upload directory (use /tmp in Azure/Docker, local uploads otherwise)
+import os
+upload_dir = Path(os.environ.get("UPLOAD_DIR", "uploads"))
+upload_dir.mkdir(exist_ok=True, parents=True)
 
-# Output directory
-output_base = Path("out/web_runs")
+# Output directory (use /tmp in Azure/Docker, local out otherwise)
+output_base = Path(os.environ.get("OUTPUT_DIR", "out/web_runs"))
 output_base.mkdir(parents=True, exist_ok=True)
 
 
@@ -447,7 +459,7 @@ async def run_comparison(
         else:
             ordered_df = ordered_dfs[0] if ordered_dfs else pd.DataFrame()
         
-        # Track all supplier names BEFORE date filtering (for BatchRX report)
+        # Track all supplier names BEFORE date filtering (for DawaiRx report)
         all_supplier_names = ordered_df["supplier_name"].dropna().unique().tolist() if "supplier_name" in ordered_df.columns else []
         logger.info(f"📋 All suppliers (before date filtering): {all_supplier_names}")
         
@@ -471,14 +483,22 @@ async def run_comparison(
             
             if date_from:
                 try:
-                    date_from_dt = pd.to_datetime(date_from).normalize()
+                    # Parse as naive datetime (no timezone) to avoid timezone shifts
+                    date_from_dt = pd.to_datetime(date_from, utc=False).normalize()
+                    # Ensure it's timezone-naive
+                    if date_from_dt.tz is not None:
+                        date_from_dt = date_from_dt.tz_localize(None)
                     logger.info(f"Date filter FROM: {date_from_dt}")
                 except Exception as e:
                     logger.warning(f"Invalid date_from format: {date_from}, error: {e}")
             
             if date_to:
                 try:
-                    date_to_dt = pd.to_datetime(date_to).normalize()
+                    # Parse as naive datetime (no timezone) to avoid timezone shifts
+                    date_to_dt = pd.to_datetime(date_to, utc=False).normalize()
+                    # Ensure it's timezone-naive
+                    if date_to_dt.tz is not None:
+                        date_to_dt = date_to_dt.tz_localize(None)
                     # Include the entire end date (set to end of day)
                     date_to_dt = date_to_dt + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
                     logger.info(f"Date filter TO: {date_to_dt}")
@@ -488,15 +508,30 @@ async def run_comparison(
             # Filter sold data by claim_date
             if "claim_date" in sold_normalized.columns:
                 rows_before = len(sold_normalized)
-                if date_from_dt is not None:
-                    sold_normalized = sold_normalized[sold_normalized["claim_date"] >= date_from_dt]
-                if date_to_dt is not None:
-                    sold_normalized = sold_normalized[sold_normalized["claim_date"] <= date_to_dt]
-                rows_after = len(sold_normalized)
-                logger.info(f"   Filtered sold data by date range: {rows_before} → {rows_after} rows (removed {rows_before - rows_after} rows)")
-                if rows_after == 0 and rows_before > 0:
-                    logger.warning(f"   ⚠️ WARNING: Date filter removed ALL sold data! Date range: {date_from} to {date_to}")
-                    logger.warning(f"   Consider adjusting the date range or leaving it empty to include all data.")
+                try:
+                    # Ensure claim_date column is Timestamp type and timezone-naive
+                    if sold_normalized["claim_date"].dtype != 'datetime64[ns]':
+                        # Convert to datetime if not already
+                        sold_normalized["claim_date"] = pd.to_datetime(sold_normalized["claim_date"], errors='coerce', utc=False)
+                    
+                    # Remove timezone if present (make timezone-naive)
+                    if sold_normalized["claim_date"].dt.tz is not None:
+                        sold_normalized["claim_date"] = sold_normalized["claim_date"].dt.tz_localize(None)
+                    
+                    # Filter by date range
+                    if date_from_dt is not None:
+                        sold_normalized = sold_normalized[sold_normalized["claim_date"].notna() & (sold_normalized["claim_date"] >= date_from_dt)]
+                    if date_to_dt is not None:
+                        sold_normalized = sold_normalized[sold_normalized["claim_date"].notna() & (sold_normalized["claim_date"] <= date_to_dt)]
+                    
+                    rows_after = len(sold_normalized)
+                    logger.info(f"   Filtered sold data by date range: {rows_before} → {rows_after} rows (removed {rows_before - rows_after} rows)")
+                    if rows_after == 0 and rows_before > 0:
+                        logger.warning(f"   ⚠️ WARNING: Date filter removed ALL sold data! Date range: {date_from} to {date_to}")
+                        logger.warning(f"   Consider adjusting the date range or leaving it empty to include all data.")
+                except Exception as e:
+                    logger.error(f"❌ Error filtering sold data by date: {e}", exc_info=True)
+                    raise ValueError(f"Failed to filter sold data by date range: {str(e)}")
             else:
                 logger.warning("   No claim_date column in sold data - cannot apply date filter")
             
@@ -511,31 +546,50 @@ async def run_comparison(
             
             if date_col_ordered:
                 rows_before = len(ordered_normalized)
-                # Filter out rows where date is None/NaN (can't determine if in range)
-                ordered_normalized = ordered_normalized[ordered_normalized[date_col_ordered].notna()]
-                
-                if date_from_dt is not None:
-                    ordered_normalized = ordered_normalized[ordered_normalized[date_col_ordered] >= date_from_dt]
-                if date_to_dt is not None:
-                    ordered_normalized = ordered_normalized[ordered_normalized[date_col_ordered] <= date_to_dt]
-                rows_after = len(ordered_normalized)
-                logger.info(f"   ✅ Filtered ordered data by date range ({date_col_ordered}): {rows_before} → {rows_after} rows (removed {rows_before - rows_after} rows outside {date_from or 'start'} to {date_to or 'end'})")
-                if rows_after == 0 and rows_before > 0:
-                    logger.warning(f"   ⚠️ WARNING: Date filter removed ALL ordered data! Date range: {date_from} to {date_to}")
-                    logger.warning(f"   Consider adjusting the date range or leaving it empty to include all data.")
+                try:
+                    # Ensure date column is Timestamp type and timezone-naive
+                    if ordered_normalized[date_col_ordered].dtype != 'datetime64[ns]':
+                        # Convert to datetime if not already
+                        ordered_normalized[date_col_ordered] = pd.to_datetime(ordered_normalized[date_col_ordered], errors='coerce', utc=False)
+                    
+                    # Remove timezone if present (make timezone-naive)
+                    if ordered_normalized[date_col_ordered].dt.tz is not None:
+                        ordered_normalized[date_col_ordered] = ordered_normalized[date_col_ordered].dt.tz_localize(None)
+                    
+                    # Filter out rows where date is None/NaN (can't determine if in range)
+                    ordered_normalized = ordered_normalized[ordered_normalized[date_col_ordered].notna()]
+                    
+                    # Filter by date range
+                    if date_from_dt is not None:
+                        ordered_normalized = ordered_normalized[ordered_normalized[date_col_ordered] >= date_from_dt]
+                    if date_to_dt is not None:
+                        ordered_normalized = ordered_normalized[ordered_normalized[date_col_ordered] <= date_to_dt]
+                    
+                    rows_after = len(ordered_normalized)
+                    logger.info(f"   ✅ Filtered ordered data by date range ({date_col_ordered}): {rows_before} → {rows_after} rows (removed {rows_before - rows_after} rows outside {date_from or 'start'} to {date_to or 'end'})")
+                    if rows_after == 0 and rows_before > 0:
+                        logger.warning(f"   ⚠️ WARNING: Date filter removed ALL ordered data! Date range: {date_from} to {date_to}")
+                        logger.warning(f"   Consider adjusting the date range or leaving it empty to include all data.")
+                except Exception as e:
+                    logger.error(f"❌ Error filtering ordered data by date: {e}", exc_info=True)
+                    raise ValueError(f"Failed to filter ordered data by date range: {str(e)}")
             else:
                 logger.warning("   ⚠️  No date column found in ordered data - cannot apply date filter. All ordered data will be included.")
         
         # Reconcile
         reconciled = reconcile_inventory(ordered_normalized, sold_normalized)
         
-        # Warn if reconciliation produced no results
+        # Check if date filtering removed all data
+        date_filter_removed_all_data = False
         if len(reconciled) == 0:
-            logger.warning("⚠️ WARNING: Reconciliation produced 0 rows!")
-            logger.warning(f"   Ordered data: {len(ordered_normalized)} rows")
-            logger.warning(f"   Sold data: {len(sold_normalized)} rows")
             if date_from or date_to:
-                logger.warning(f"   This may be due to date filtering. Consider removing date filters or adjusting the range.")
+                date_filter_removed_all_data = True
+                error_msg = f"Date filter ({date_from} to {date_to}) resulted in no data. Ordered data after filter: {len(ordered_normalized)} rows, Sold data after filter: {len(sold_normalized)} rows. Please adjust the date range or remove the filter."
+                logger.warning(f"⚠️ WARNING: {error_msg}")
+            else:
+                error_msg = f"Reconciliation produced 0 rows. Ordered data: {len(ordered_normalized)} rows, Sold data: {len(sold_normalized)} rows. Please check your input files."
+                logger.warning(f"⚠️ WARNING: {error_msg}")
+            # Don't raise error here - let DawaiRx generation handle it with better error message
         
         summary = generate_summary(reconciled)
         
@@ -573,10 +627,105 @@ async def run_comparison(
             issues_df.to_csv(output_dir / "issues.csv", index=False)
         
         # Save processed source data for medicine detail queries
-        # Save ordered data with supplier information
-        ordered_normalized.to_csv(output_dir / "source_ordered.csv", index=False)
+        # Convert date columns to date-only strings (YYYY-MM-DD) to avoid timezone issues
+        date_columns = ["claim_date", "date_filled", "order_date", "invoice_date", "purchase_date"]
+        
+        # Prepare ordered data for saving
+        ordered_for_save = ordered_normalized.copy()
+        for date_col in date_columns:
+            if date_col in ordered_for_save.columns:
+                # Convert Timestamp to date-only string, ensuring it's always a string
+                def convert_date_to_string(x):
+                    if pd.isna(x):
+                        return ''
+                    if isinstance(x, pd.Timestamp):
+                        # Ensure timezone-naive before extracting date
+                        ts = x
+                        if ts.tz is not None:
+                            ts = ts.tz_localize(None)
+                        # Use date() to get date-only (no time/timezone), then format
+                        return ts.date().strftime("%Y-%m-%d")
+                    elif isinstance(x, datetime):
+                        # Ensure timezone-naive
+                        dt = x
+                        if dt.tzinfo is not None:
+                            dt = dt.replace(tzinfo=None)
+                        return dt.date().strftime("%Y-%m-%d")
+                    elif isinstance(x, str):
+                        # If already a string, try to normalize to YYYY-MM-DD
+                        x_str = x.strip()
+                        if len(x_str) == 10 and x_str.count('-') == 2:
+                            return x_str  # Already in YYYY-MM-DD format
+                        else:
+                            # Try to parse and convert
+                            try:
+                                parsed = pd.to_datetime(x_str, errors='coerce', utc=False)
+                                if pd.notna(parsed):
+                                    # Ensure timezone-naive
+                                    if parsed.tz is not None:
+                                        parsed = parsed.tz_localize(None)
+                                    return parsed.date().strftime("%Y-%m-%d")
+                                else:
+                                    return x_str
+                            except:
+                                return x_str
+                    else:
+                        # For other types, convert to string
+                        return str(x)
+                ordered_for_save[date_col] = ordered_for_save[date_col].apply(convert_date_to_string)
+                # Ensure the column is explicitly string type
+                ordered_for_save[date_col] = ordered_for_save[date_col].astype(str)
+        
+        # Prepare sold data for saving
+        sold_for_save = sold_normalized.copy()
+        for date_col in date_columns:
+            if date_col in sold_for_save.columns:
+                # Convert Timestamp to date-only string, ensuring it's always a string
+                def convert_date_to_string(x):
+                    if pd.isna(x):
+                        return ''
+                    if isinstance(x, pd.Timestamp):
+                        # Ensure timezone-naive before extracting date
+                        ts = x
+                        if ts.tz is not None:
+                            ts = ts.tz_localize(None)
+                        # Use date() to get date-only (no time/timezone), then format
+                        return ts.date().strftime("%Y-%m-%d")
+                    elif isinstance(x, datetime):
+                        # Ensure timezone-naive
+                        dt = x
+                        if dt.tzinfo is not None:
+                            dt = dt.replace(tzinfo=None)
+                        return dt.date().strftime("%Y-%m-%d")
+                    elif isinstance(x, str):
+                        # If already a string, try to normalize to YYYY-MM-DD
+                        x_str = x.strip()
+                        if len(x_str) == 10 and x_str.count('-') == 2:
+                            return x_str  # Already in YYYY-MM-DD format
+                        else:
+                            # Try to parse and convert
+                            try:
+                                parsed = pd.to_datetime(x_str, errors='coerce', utc=False)
+                                if pd.notna(parsed):
+                                    # Ensure timezone-naive
+                                    if parsed.tz is not None:
+                                        parsed = parsed.tz_localize(None)
+                                    return parsed.date().strftime("%Y-%m-%d")
+                                else:
+                                    return x_str
+                            except:
+                                return x_str
+                    else:
+                        # For other types, convert to string
+                        return str(x)
+                sold_for_save[date_col] = sold_for_save[date_col].apply(convert_date_to_string)
+                # Ensure the column is explicitly string type
+                sold_for_save[date_col] = sold_for_save[date_col].astype(str)
+        
+        # Save ordered data with supplier information - use quoting to preserve string format
+        ordered_for_save.to_csv(output_dir / "source_ordered.csv", index=False, quoting=csv.QUOTE_ALL)
         # Save sold data (inventory report)
-        sold_normalized.to_csv(output_dir / "source_sold.csv", index=False)
+        sold_for_save.to_csv(output_dir / "source_sold.csv", index=False, quoting=csv.QUOTE_ALL)
         
         # Save summary
         summary_with_issues = summary.copy()
@@ -591,64 +740,114 @@ async def run_comparison(
         with open(output_dir / "summary.json", 'w') as f:
             json.dump(summary_with_issues, f, indent=2)
         
-        # Generate BatchRx-style unified report (main output)
-        batchrx_report = None
+        # Generate DawaiRx-style unified report (main output)
+        dawairx_report = None
+        dawairx_error = None
         try:
-            from src.reporting.batchrx_format import create_batchrx_report
-            logger.info("🔄 Starting BatchRx report generation...")
+            from src.reporting.dawairx_format import create_dawairx_report
+            logger.info("🔄 Starting DawaiRx report generation...")
             logger.info(f"   Reconciled: {len(reconciled)} rows, columns: {list(reconciled.columns)[:10]}")
             logger.info(f"   Sold normalized: {len(sold_normalized)} rows, columns: {list(sold_normalized.columns)[:10]}")
             logger.info(f"   Ordered normalized: {len(ordered_normalized)} rows, columns: {list(ordered_normalized.columns)[:10]}")
             
-            # Debug: Check if medicine_key exists
-            if "medicine_key" not in reconciled.columns:
-                logger.error(f"❌ medicine_key missing in reconciled. Available columns: {list(reconciled.columns)}")
-                # Try to create medicine_key if ndc exists
-                if "ndc" in reconciled.columns:
-                    logger.info("   Creating medicine_key from ndc...")
-                    reconciled["medicine_key"] = reconciled["ndc"].astype(str)
+            # Check if date filtering resulted in empty data
+            if len(reconciled) == 0:
+                if date_filter_removed_all_data:
+                    error_msg = f"Nothing to show for this report. No data found for the selected date range ({date_from} to {date_to}). Please adjust the date range or remove the date filter to see all data."
+                    logger.warning(f"⚠️ {error_msg}")
+                    dawairx_error = error_msg
+                    # Create empty report structure
+                    dawairx_report = pd.DataFrame(columns=[
+                        "NDC", "DRUG NAME", "RANK", "PKG SIZE",
+                        "TOTAL\nORDERED-O", "TOTAL\nBILLED-B", "TOTAL\nSHORTAGE-S", "HIGHEST\nSHORTAGE-S",
+                        "AMOUNT", "COST"
+                    ])
+                    # Save empty report to CSV
+                    output_file = output_dir / "inventory_report.csv"
+                    output_file.parent.mkdir(parents=True, exist_ok=True)
+                    dawairx_report.to_csv(output_file, index=False)
+                    logger.info("   Created empty DawaiRx report (date filter removed all data)")
                 else:
-                    raise ValueError("Neither medicine_key nor ndc found in reconciled DataFrame")
-            
-            logger.info(f"📋 Passing {len(all_supplier_names) if all_supplier_names else 0} suppliers to create_batchrx_report: {all_supplier_names}")
-            
-            # DEBUG: Check sold_normalized data for specific NDC before calling create_batchrx_report
-            test_ndc = 'NDC:00536129497'
-            test_rows = sold_normalized[sold_normalized['medicine_key'] == test_ndc] if 'medicine_key' in sold_normalized.columns else pd.DataFrame()
-            if len(test_rows) > 0:
-                primary_sum = test_rows['primary_insurance_paid'].sum() if 'primary_insurance_paid' in test_rows.columns else 0
-                secondary_sum = test_rows['secondary_insurance_paid'].sum() if 'secondary_insurance_paid' in test_rows.columns else 0
-                total = primary_sum + secondary_sum
-                import numpy as np
-                floor_val = int(np.floor(total))
-                logger.info(f"🔍 DEBUG: Before create_batchrx_report - NDC {test_ndc}: total={total}, floor={floor_val}, expected=11")
-            
-            batchrx_report = create_batchrx_report(
-                str(output_dir / "inventory_report.csv"),
-                reconciled,
-                sold_normalized,
-                ordered_normalized,
-                summary_with_issues,
-                all_supplier_names=all_supplier_names  # Pass all suppliers (before date filtering)
-            )
-            
-            # DEBUG: Check result after create_batchrx_report
-            if 'NDC' in batchrx_report.columns:
-                test_result = batchrx_report[batchrx_report['NDC'] == '00536-1294-97']
-                if len(test_result) > 0:
-                    amount_val = test_result['AMOUNT'].values[0]
-                    logger.info(f"🔍 DEBUG: After create_batchrx_report - NDC 00536-1294-97: AMOUNT={amount_val}, expected=11")
-            logger.info(f"✅ Created BatchRx-style report: {len(batchrx_report)} rows, {len(batchrx_report.columns)} columns")
+                    error_msg = "Reconciliation produced no results. Please check your input files."
+                    logger.warning(f"⚠️ {error_msg}")
+                    dawairx_error = error_msg
+                    # Create empty report structure
+                    dawairx_report = pd.DataFrame(columns=[
+                        "NDC", "DRUG NAME", "RANK", "PKG SIZE",
+                        "TOTAL\nORDERED-O", "TOTAL\nBILLED-B", "TOTAL\nSHORTAGE-S", "HIGHEST\nSHORTAGE-S",
+                        "AMOUNT", "COST"
+                    ])
+                    # Save empty report to CSV
+                    output_file = output_dir / "inventory_report.csv"
+                    output_file.parent.mkdir(parents=True, exist_ok=True)
+                    dawairx_report.to_csv(output_file, index=False)
+                    logger.info("   Created empty DawaiRx report (no data to reconcile)")
+                # Skip actual report generation since there's no data
+            else:
+                # Proceed with normal report generation
+                # Debug: Check if medicine_key exists
+                if "medicine_key" not in reconciled.columns:
+                    logger.error(f"❌ medicine_key missing in reconciled. Available columns: {list(reconciled.columns)}")
+                    # Try to create medicine_key if ndc exists
+                    if "ndc" in reconciled.columns:
+                        logger.info("   Creating medicine_key from ndc...")
+                        reconciled["medicine_key"] = reconciled["ndc"].astype(str)
+                    else:
+                        raise ValueError("Neither medicine_key nor ndc found in reconciled DataFrame")
+                
+                logger.info(f"📋 Passing {len(all_supplier_names) if all_supplier_names else 0} suppliers to create_dawairx_report: {all_supplier_names}")
+                
+                # DEBUG: Check sold_normalized data for specific NDC before calling create_dawairx_report
+                test_ndc = 'NDC:00536129497'
+                test_rows = sold_normalized[sold_normalized['medicine_key'] == test_ndc] if 'medicine_key' in sold_normalized.columns else pd.DataFrame()
+                if len(test_rows) > 0:
+                    primary_sum = test_rows['primary_insurance_paid'].sum() if 'primary_insurance_paid' in test_rows.columns else 0
+                    secondary_sum = test_rows['secondary_insurance_paid'].sum() if 'secondary_insurance_paid' in test_rows.columns else 0
+                    total = primary_sum + secondary_sum
+                    import numpy as np
+                    floor_val = int(np.floor(total))
+                    logger.info(f"🔍 DEBUG: Before create_dawairx_report - NDC {test_ndc}: total={total}, floor={floor_val}, expected=11")
+                
+                dawairx_report = create_dawairx_report(
+                    str(output_dir / "inventory_report.csv"),
+                    reconciled,
+                    sold_normalized,
+                    ordered_normalized,
+                    summary_with_issues,
+                    all_supplier_names=all_supplier_names  # Pass all suppliers (before date filtering)
+                )
+                
+                # DEBUG: Check result after create_dawairx_report
+                if 'NDC' in dawairx_report.columns:
+                    test_result = dawairx_report[dawairx_report['NDC'] == '00536-1294-97']
+                    if len(test_result) > 0:
+                        amount_val = test_result['AMOUNT'].values[0]
+                        logger.info(f"🔍 DEBUG: After create_dawairx_report - NDC 00536-1294-97: AMOUNT={amount_val}, expected=11")
+                logger.info(f"✅ Created DawaiRx-style report: {len(dawairx_report)} rows, {len(dawairx_report.columns)} columns")
         except Exception as e:
-            logger.error(f"❌ BatchRx report generation failed: {e}", exc_info=True)
+            logger.error(f"❌ DawaiRx report generation failed: {e}", exc_info=True)
             import traceback
-            logger.error(traceback.format_exc())
-            batchrx_report = None
+            error_traceback = traceback.format_exc()
+            logger.error(error_traceback)
+            dawairx_report = None
+            # Store error message for UI display
+            dawairx_error = str(e)
+            # Include more context in error message
+            if "medicine_key" in str(e).lower():
+                dawairx_error = f"Missing required column 'medicine_key' in data. {dawairx_error}"
+            elif "merge" in str(e).lower() or "column" in str(e).lower():
+                dawairx_error = f"Data structure issue: {dawairx_error}"
         
-        # Generate Excel report (legacy format)
-        create_audit_report(str(output_dir / "audit_report.xlsx"), reconciled, issues_df, summary_with_issues)
+        # Generate Excel report (using DawaiRx format to match UI)
+        create_audit_report(
+            str(output_dir / "audit_report.xlsx"), 
+            reconciled, 
+            issues_df, 
+            summary_with_issues,
+            dawairx_report=dawairx_report  # Pass DawaiRx report to match UI format
+        )
         
-        # Generate PDF report (detailed)
+        # Generate PDF report (using DawaiRx format to match UI)
         try:
             from src.reporting.pdf import create_detailed_pdf_report
             create_detailed_pdf_report(
@@ -657,78 +856,99 @@ async def run_comparison(
                 issues_df,
                 summary_with_issues,
                 ordered_normalized,
-                sold_normalized
+                sold_normalized,
+                dawairx_report=dawairx_report  # Pass DawaiRx report to match UI format
             )
         except Exception as e:
             logger.warning(f"PDF generation failed: {e}")
         
+        # Check if report has any data before saving
+        # A report has data if it has medicines, orders, sales, or reconciled data
+        has_data = (
+            summary_with_issues.get("total_medicines", 0) > 0 or
+            summary_with_issues.get("total_ordered", 0) > 0 or
+            summary_with_issues.get("total_sold", 0) > 0 or
+            len(reconciled) > 0 or
+            (dawairx_report is not None and len(dawairx_report) > 0)
+        )
+        
         # Save to MongoDB - use the same run_id for consistency
-        try:
-            store = RunStore()
-            # Prepare config metadata with date range and report name
-            config_metadata = {
-                "date_from": date_from,
-                "date_to": date_to,
-                "report_name": report_name,
-                "session_id": session_id,  # Save session_id to allow source file regeneration
-            }
-            # Save with the same run_id used for file paths
-            saved_run_id = store.save_run(
-                user_id=user_id,
-                ordered_file=str(ordered_path),
-                sold_file=str(sold_path),
-                mapping_file=str(mapping_path) if mapping_path else None,
-                reconciled_df=reconciled,
-                issues=issues,
-                summary=summary_with_issues,
-                run_id=run_id,  # Use the same run_id as file paths
-                config_metadata=config_metadata
-            )
-            logger.info(f"✅ Saved run to MongoDB with run_id: {saved_run_id}")
-        except Exception as e:
-            logger.warning(f"Failed to save to MongoDB: {e}")
-            saved_run_id = run_id  # Fallback to original run_id
-        
-        # Convert BatchRx report to JSON for UI display (limit to first 100 rows for performance)
-        batchrx_json = None
-        batchrx_row_count = 0
-        batchrx_columns = []
-        
-        logger.info(f"🔍 Checking BatchRx report: is None={batchrx_report is None}, length={len(batchrx_report) if batchrx_report is not None else 'N/A'}")
-        
-        if batchrx_report is not None and len(batchrx_report) > 0:
+        # Only save if report has data (don't save empty reports to avoid cluttering dashboard/history)
+        saved_run_id = run_id
+        if has_data:
             try:
-                batchrx_row_count = len(batchrx_report)
-                logger.info(f"📊 Processing BatchRx report for UI: {batchrx_row_count} rows, {len(batchrx_report.columns)} columns")
+                store = RunStore()
+                # Prepare config metadata with date range and report name
+                config_metadata = {
+                    "date_from": date_from,
+                    "date_to": date_to,
+                    "report_name": report_name,
+                    "session_id": session_id,  # Save session_id to allow source file regeneration
+                }
+                # Save with the same run_id used for file paths
+                saved_run_id = store.save_run(
+                    user_id=user_id,
+                    ordered_file=str(ordered_path),
+                    sold_file=str(sold_path),
+                    mapping_file=str(mapping_path) if mapping_path else None,
+                    reconciled_df=reconciled,
+                    issues=issues,
+                    summary=summary_with_issues,
+                    run_id=run_id,  # Use the same run_id as file paths
+                    config_metadata=config_metadata
+                )
+                logger.info(f"✅ Saved run to MongoDB with run_id: {saved_run_id}")
+            except Exception as e:
+                logger.warning(f"Failed to save to MongoDB: {e}")
+                saved_run_id = run_id  # Fallback to original run_id
+        else:
+            logger.info(f"⏭️ Skipping save to MongoDB - report has no data (empty report will not appear in dashboard/history)")
+            logger.info(f"   Summary: medicines={summary_with_issues.get('total_medicines', 0)}, ordered={summary_with_issues.get('total_ordered', 0)}, sold={summary_with_issues.get('total_sold', 0)}")
+            logger.info(f"   Reconciled rows: {len(reconciled)}, DawaiRx rows: {len(dawairx_report) if dawairx_report is not None else 0}")
+        
+        # Convert DawaiRx report to JSON for UI display (limit to first 100 rows for performance)
+        dawairx_json = None
+        dawairx_row_count = 0
+        dawairx_columns = []
+        
+        logger.info(f"🔍 Checking DawaiRx report: is None={dawairx_report is None}, length={len(dawairx_report) if dawairx_report is not None else 'N/A'}")
+        
+        # Check if report was generated successfully (even if empty)
+        report_generated_successfully = dawairx_report is not None and dawairx_error is None
+        
+        if dawairx_report is not None and len(dawairx_report) > 0:
+            try:
+                dawairx_row_count = len(dawairx_report)
+                logger.info(f"📊 Processing DawaiRx report for UI: {dawairx_row_count} rows, {len(dawairx_report.columns)} columns")
                 # Convert to dict for JSON serialization - send FULL report (no limit)
                 # Use vectorized operations for speed
                 # Replace 0 values with NaN (will be converted to empty string/null for UI)
-                # BatchRX shows blank cells for 0 values
-                batchrx_full = batchrx_report.copy()
+                # DawaiRx shows blank cells for 0 values
+                dawairx_full = dawairx_report.copy()
                 # Replace 0 and 0.0 with NaN (will show as blank in UI)
-                batchrx_full = batchrx_full.replace(0, pd.NA)
-                batchrx_full = batchrx_full.replace(0.0, pd.NA)
+                dawairx_full = dawairx_full.replace(0, pd.NA)
+                dawairx_full = dawairx_full.replace(0.0, pd.NA)
                 # Replace inf values with NaN
-                batchrx_full = batchrx_full.replace([float('inf'), float('-inf')], pd.NA)
+                dawairx_full = dawairx_full.replace([float('inf'), float('-inf')], pd.NA)
                 # Fill remaining NaN with empty string for string columns, keep NaN for numeric (will be null in JSON)
-                batchrx_full = batchrx_full.fillna('')
+                dawairx_full = dawairx_full.fillna('')
                 # Convert to dict (much faster than manual loops)
                 # Limit to first 1000 rows for performance - large reports can hang the browser
                 max_rows_for_ui = 1000
-                if len(batchrx_full) > max_rows_for_ui:
-                    logger.warning(f"⚠️ BatchRx report has {len(batchrx_full)} rows, limiting to {max_rows_for_ui} for UI")
-                    batchrx_full = batchrx_full.head(max_rows_for_ui)
+                if len(dawairx_full) > max_rows_for_ui:
+                    logger.warning(f"⚠️ DawaiRx report has {len(dawairx_full)} rows, limiting to {max_rows_for_ui} for UI")
+                    dawairx_full = dawairx_full.head(max_rows_for_ui)
                 
-                logger.info(f"📊 Converting {len(batchrx_full)} rows to JSON...")
+                logger.info(f"📊 Converting {len(dawairx_full)} rows to JSON...")
                 convert_start = time.time()
-                batchrx_json = batchrx_full.to_dict(orient='records')
+                dawairx_json = dawairx_full.to_dict(orient='records')
                 logger.info(f"✅ JSON conversion took {time.time() - convert_start:.2f}s")
                 
                 # Cleanup: convert empty strings back to null for numeric columns (shows as blank in UI)
                 import numpy as np
-                numeric_cols = batchrx_report.select_dtypes(include=['number']).columns
+                numeric_cols = dawairx_report.select_dtypes(include=['number']).columns
                 cleanup_start = time.time()
-                for record in batchrx_json:
+                for record in dawairx_json:
                     for col in numeric_cols:
                         if col in record:
                             # Convert empty string to null for numeric columns (shows as blank)
@@ -738,18 +958,62 @@ async def run_comparison(
                                 record[col] = None
                 logger.info(f"✅ Cleanup took {time.time() - cleanup_start:.2f}s")
                 # Get column names
-                batchrx_columns = list(batchrx_report.columns)
-                logger.info(f"✅ BatchRx report ready for UI: {len(batchrx_json)} rows (FULL report), {len(batchrx_columns)} columns")
-                logger.info(f"   First row sample: {batchrx_json[0] if batchrx_json else 'empty'}")
+                dawairx_columns = list(dawairx_report.columns)
+                logger.info(f"✅ DawaiRx report ready for UI: {len(dawairx_json)} rows (FULL report), {len(dawairx_columns)} columns")
+                logger.info(f"   First row sample: {dawairx_json[0] if dawairx_json else 'empty'}")
             except Exception as e:
-                logger.error(f"❌ Failed to process BatchRx report for UI: {e}", exc_info=True)
-                batchrx_json = None
-                batchrx_columns = []
-                batchrx_row_count = 0
+                logger.error(f"❌ Failed to process DawaiRx report for UI: {e}", exc_info=True)
+                dawairx_json = None
+                dawairx_columns = []
+                dawairx_row_count = 0
+        elif dawairx_report is not None and len(dawairx_report) == 0:
+            # Empty report - check if it's due to date filtering or no sales data
+            logger.info(f"✅ DawaiRx report generated successfully but is empty (0 rows)")
+            dawairx_json = []
+            dawairx_columns = list(dawairx_report.columns) if len(dawairx_report.columns) > 0 else []
+            dawairx_row_count = 0
+            # Set a helpful error message for empty reports
+            if not dawairx_error:
+                # Check if it's due to date filtering
+                if date_filter_removed_all_data:
+                    dawairx_error = f"Nothing to show for this report. No data found for the selected date range ({date_from} to {date_to}). Please adjust the date range or remove the date filter to see all data."
+                else:
+                    dawairx_error = "No sales data found. The report was generated successfully but contains no medicines with sales (TOTAL BILLED-B = 0 for all medicines). This may be due to missing sold quantities in the input data."
         else:
-            logger.warning(f"⚠️ BatchRx report is None or empty - will not show in UI")
-            logger.error(f"❌ BatchRx report generation failed - check logs above for details")
-            # Don't add fallback - we want BatchRx report to work, not show sample data
+            logger.warning(f"⚠️ DawaiRx report is None - generation may have failed")
+            if dawairx_error:
+                logger.error(f"❌ DawaiRx report generation failed: {dawairx_error}")
+            else:
+                logger.error(f"❌ DawaiRx report generation failed - check logs above for details")
+            # Don't add fallback - we want DawaiRx report to work, not show sample data
+        
+        # Determine if this is a "no data" scenario (not an error)
+        # If report is empty (0 rows), it's ALWAYS "no data" not an error
+        is_no_data_scenario = False
+        
+        if dawairx_report is not None and len(dawairx_report) == 0:
+            # Empty report = no data scenario (not an error) - ALWAYS TRUE
+            is_no_data_scenario = True
+            logger.info(f"✅ Empty report detected - setting is_no_data=True")
+            if not dawairx_error:
+                dawairx_error = "No data available for this report. The report was generated successfully but contains no data to display."
+        elif dawairx_report is None:
+            # Report is None - check if error indicates "no data" vs actual error
+            if dawairx_error:
+                error_lower = dawairx_error.lower()
+                if any(phrase in error_lower for phrase in [
+                    "nothing to show", "no sales data", "no data found", "no data available",
+                    "date filter", "date range", "no medicines", "no data to display"
+                ]):
+                    is_no_data_scenario = True
+                    logger.info(f"✅ No data scenario detected from error message - setting is_no_data=True")
+            else:
+                # No report and no error - treat as no data
+                is_no_data_scenario = True
+                dawairx_error = "No data available for this report."
+                logger.info(f"✅ No report and no error - setting is_no_data=True")
+        
+        logger.info(f"📊 Final check: is_no_data={is_no_data_scenario}, dawairx_error={dawairx_error}, report_length={len(dawairx_report) if dawairx_report is not None else 'None'}")
         
         # Prepare response with data for UI display
         response_data = {
@@ -757,21 +1021,23 @@ async def run_comparison(
             "run_id": run_id,
             "saved_run_id": saved_run_id,
             "summary": summary_with_issues,
-            "batchrx_report": batchrx_json,  # BatchRx report data for UI
-            "batchrx_columns": batchrx_columns,
-            "batchrx_row_count": batchrx_row_count,
+            "dawairx_report": dawairx_json,  # DawaiRx report data for UI
+            "dawairx_columns": dawairx_columns,
+            "dawairx_row_count": dawairx_row_count,
+            "dawairx_error": dawairx_error,  # Include error message if generation failed
+            "is_no_data": is_no_data_scenario,  # Flag to indicate this is "no data" not an error
         }
         
         # Log what we're sending
         logger.info(f"📤 Sending response to UI:")
-        logger.info(f"   batchrx_report: {type(batchrx_json)}, length: {len(batchrx_json) if batchrx_json else 0}")
-        logger.info(f"   batchrx_columns: {len(batchrx_columns)} columns")
-        logger.info(f"   batchrx_row_count: {batchrx_row_count}")
-        if batchrx_json and len(batchrx_json) > 0:
-            logger.info(f"   First row keys: {list(batchrx_json[0].keys())[:5]}...")
+        logger.info(f"   dawairx_report: {type(dawairx_json)}, length: {len(dawairx_json) if dawairx_json else 0}")
+        logger.info(f"   dawairx_columns: {len(dawairx_columns)} columns")
+        logger.info(f"   dawairx_row_count: {dawairx_row_count}")
+        if dawairx_json and len(dawairx_json) > 0:
+            logger.info(f"   First row keys: {list(dawairx_json[0].keys())[:5]}...")
         
         # Add sample data for UI display (first 20 rows of each) - keep for reference
-        # Add counts only (not sample data - we want full BatchRx report)
+        # Add counts only (not sample data - we want full DawaiRx report)
         response_data["remaining_count"] = len(remaining)
         response_data["shortages_count"] = len(shortages)
         response_data["issues_count"] = len(issues_df)
@@ -780,7 +1046,7 @@ async def run_comparison(
         total_elapsed = time.time() - start_time
         logger.info(f"✅ Reconciliation completed in {total_elapsed:.2f}s")
         logger.info(f"   Run ID: {run_id}")
-        logger.info(f"   BatchRx rows: {batchrx_row_count}")
+        logger.info(f"   DawaiRx rows: {dawairx_row_count}")
         
         return JSONResponse(response_data)
         
@@ -883,52 +1149,52 @@ async def get_run(run_id: str, user_id: str = Depends(get_current_user_id)):
         
         # Don't load items/issues - not needed for viewing report (saves time)
         
-        # Check if BatchRx report exists and get metadata only (fast)
-        batchrx_columns = []
-        batchrx_row_count = 0
-        batchrx_report = None
+        # Check if DawaiRx report exists and get metadata only (fast)
+        dawairx_columns = []
+        dawairx_row_count = 0
+        dawairx_report = None
         
         try:
             # Files are stored in out/web_runs/{run_id}/
-            batchrx_file = output_base / run_id / "inventory_report.csv"
+            dawairx_file = output_base / run_id / "inventory_report.csv"
             # Fallback check - output_base already includes "web_runs"
-            if not batchrx_file.exists():
+            if not dawairx_file.exists():
                 # Try direct path as fallback
-                batchrx_file = Path("out") / run_id / "inventory_report.csv"
-            if batchrx_file.exists():
+                dawairx_file = Path("out") / run_id / "inventory_report.csv"
+            if dawairx_file.exists():
                 import pandas as pd
                 # Only read first row to get columns (very fast)
-                df_sample = pd.read_csv(batchrx_file, nrows=1)
-                batchrx_columns = list(df_sample.columns)
+                df_sample = pd.read_csv(dawairx_file, nrows=1)
+                dawairx_columns = list(df_sample.columns)
                 
                 # Get row count efficiently (read only first column)
-                with open(batchrx_file, 'r') as f:
-                    batchrx_row_count = sum(1 for line in f) - 1  # -1 for header
+                with open(dawairx_file, 'r') as f:
+                    dawairx_row_count = sum(1 for line in f) - 1  # -1 for header
                 
                 # Load FULL report (not just preview) for viewing
                 # Use chunking for large files to avoid memory issues
                 try:
-                    df_full = pd.read_csv(batchrx_file)
+                    df_full = pd.read_csv(dawairx_file)
                     logger.info(f"📊 Loading full report: {len(df_full)} rows")
                 except MemoryError:
                     logger.warning(f"⚠️ Memory error loading full report, using chunked approach")
                     # Fallback: load in chunks and combine
                     chunk_list = []
-                    for chunk in pd.read_csv(batchrx_file, chunksize=1000):
+                    for chunk in pd.read_csv(dawairx_file, chunksize=1000):
                         chunk_list.append(chunk)
                     df_full = pd.concat(chunk_list, ignore_index=True)
                 
-                # Replace 0 values with NaN (will show as blank in UI, matching BatchRX)
+                # Replace 0 values with NaN (will show as blank in UI, matching DawaiRx)
                 df_full = df_full.replace(0, pd.NA)
                 df_full = df_full.replace(0.0, pd.NA)
                 # Fill NaN with empty string, then convert to dict
                 df_full = df_full.fillna('')
-                batchrx_report = df_full.to_dict(orient='records')
+                dawairx_report = df_full.to_dict(orient='records')
                 
                 # Quick cleanup for all rows - convert empty strings to null for numeric columns
                 import numpy as np
                 numeric_cols = df_full.select_dtypes(include=['number']).columns
-                for record in batchrx_report:
+                for record in dawairx_report:
                     for key, value in record.items():
                         if key in numeric_cols:
                             # Convert empty string to null for numeric columns (shows as blank)
@@ -939,15 +1205,23 @@ async def get_run(run_id: str, user_id: str = Depends(get_current_user_id)):
                         elif pd.isna(value):
                             record[key] = ""
                 
-                logger.info(f"✅ Loaded BatchRx report: {len(batchrx_report)} rows (full report), {len(batchrx_columns)} columns")
+                logger.info(f"✅ Loaded DawaiRx report: {len(dawairx_report)} rows (full report), {len(dawairx_columns)} columns")
         except Exception as e:
-            logger.warning(f"Could not load BatchRx report for run {run_id}: {e}")
+            logger.warning(f"Could not load DawaiRx report for run {run_id}: {e}")
+        
+        # Determine if this is a "no data" scenario (report is empty)
+        is_no_data = (dawairx_row_count == 0 and (not dawairx_report or len(dawairx_report) == 0))
+        dawairx_error = None
+        if is_no_data:
+            dawairx_error = "No data available for this report."
         
         return JSONResponse({
             "run": run,
-            "batchrx_report": batchrx_report,
-            "batchrx_columns": batchrx_columns,
-            "batchrx_row_count": batchrx_row_count,
+            "dawairx_report": dawairx_report,
+            "dawairx_columns": dawairx_columns,
+            "dawairx_row_count": dawairx_row_count,
+            "is_no_data": is_no_data,  # Flag to indicate this is "no data" not an error
+            "dawairx_error": dawairx_error,  # Error message if applicable
         })
     except HTTPException:
         raise
@@ -1142,10 +1416,96 @@ async def get_medicine_entries(
                             sold_normalized = normalize_dataframe(sold_df, "sold")
                             
                             # Save regenerated source files
+                            # Convert date columns to date-only strings (YYYY-MM-DD) to avoid timezone issues
+                            date_columns = ["claim_date", "date_filled", "order_date", "invoice_date", "purchase_date"]
+                            
+                            # Prepare ordered data for saving
+                            ordered_for_save = ordered_normalized.copy()
+                            for date_col in date_columns:
+                                if date_col in ordered_for_save.columns:
+                                    # Convert Timestamp to date-only string, ensuring it's always a string
+                                    def convert_date_to_string(x):
+                                        if pd.isna(x):
+                                            return ''
+                                        if isinstance(x, pd.Timestamp):
+                                            # Ensure timezone-naive before extracting date
+                                            ts = x
+                                            if ts.tz is not None:
+                                                ts = ts.tz_localize(None)
+                                            return ts.date().strftime("%Y-%m-%d")
+                                        elif isinstance(x, datetime):
+                                            # Ensure timezone-naive
+                                            dt = x
+                                            if dt.tzinfo is not None:
+                                                dt = dt.replace(tzinfo=None)
+                                            return dt.date().strftime("%Y-%m-%d")
+                                        elif isinstance(x, str):
+                                            x_str = x.strip()
+                                            if len(x_str) == 10 and x_str.count('-') == 2:
+                                                return x_str
+                                            else:
+                                                try:
+                                                    parsed = pd.to_datetime(x_str, errors='coerce', utc=False)
+                                                    if pd.notna(parsed):
+                                                        # Ensure timezone-naive
+                                                        if parsed.tz is not None:
+                                                            parsed = parsed.tz_localize(None)
+                                                        return parsed.date().strftime("%Y-%m-%d")
+                                                    else:
+                                                        return x_str
+                                                except:
+                                                    return x_str
+                                        else:
+                                            return str(x)
+                                    ordered_for_save[date_col] = ordered_for_save[date_col].apply(convert_date_to_string)
+                                    ordered_for_save[date_col] = ordered_for_save[date_col].astype(str)
+                            
+                            # Prepare sold data for saving
+                            sold_for_save = sold_normalized.copy()
+                            for date_col in date_columns:
+                                if date_col in sold_for_save.columns:
+                                    # Convert Timestamp to date-only string, ensuring it's always a string
+                                    def convert_date_to_string(x):
+                                        if pd.isna(x):
+                                            return ''
+                                        if isinstance(x, pd.Timestamp):
+                                            # Ensure timezone-naive before extracting date
+                                            ts = x
+                                            if ts.tz is not None:
+                                                ts = ts.tz_localize(None)
+                                            return ts.date().strftime("%Y-%m-%d")
+                                        elif isinstance(x, datetime):
+                                            # Ensure timezone-naive
+                                            dt = x
+                                            if dt.tzinfo is not None:
+                                                dt = dt.replace(tzinfo=None)
+                                            return dt.date().strftime("%Y-%m-%d")
+                                        elif isinstance(x, str):
+                                            x_str = x.strip()
+                                            if len(x_str) == 10 and x_str.count('-') == 2:
+                                                return x_str
+                                            else:
+                                                try:
+                                                    parsed = pd.to_datetime(x_str, errors='coerce', utc=False)
+                                                    if pd.notna(parsed):
+                                                        # Ensure timezone-naive
+                                                        if parsed.tz is not None:
+                                                            parsed = parsed.tz_localize(None)
+                                                        return parsed.date().strftime("%Y-%m-%d")
+                                                    else:
+                                                        return x_str
+                                                except:
+                                                    return x_str
+                                        else:
+                                            return str(x)
+                                    sold_for_save[date_col] = sold_for_save[date_col].apply(convert_date_to_string)
+                                    sold_for_save[date_col] = sold_for_save[date_col].astype(str)
+                            
                             output_dir = output_base / run_id
                             output_dir.mkdir(parents=True, exist_ok=True)
-                            ordered_normalized.to_csv(ordered_file, index=False)
-                            sold_normalized.to_csv(sold_file, index=False)
+                            # Use QUOTE_ALL to preserve string format
+                            ordered_for_save.to_csv(ordered_file, index=False, quoting=csv.QUOTE_ALL)
+                            sold_for_save.to_csv(sold_file, index=False, quoting=csv.QUOTE_ALL)
                             logger.info(f"✅ Regenerated source files for run {run_id}")
                         else:
                             raise HTTPException(status_code=404, detail="Source data files not found and cannot be regenerated (original files missing)")
@@ -1157,9 +1517,16 @@ async def get_medicine_entries(
             else:
                 raise HTTPException(status_code=404, detail="Source data files not found (this appears to be an older report without source data)")
         
-        # Load DataFrames
-        ordered_df = pd.read_csv(ordered_file)
-        sold_df = pd.read_csv(sold_file)
+        # Load DataFrames - read dates as strings to avoid timezone issues
+        # First, get column names to determine which date columns exist
+        ordered_cols = pd.read_csv(ordered_file, nrows=0).columns.tolist()
+        sold_cols = pd.read_csv(sold_file, nrows=0).columns.tolist()
+        date_columns = ["claim_date", "date_filled", "order_date", "invoice_date", "purchase_date"]
+        ordered_date_dtype = {col: str for col in date_columns if col in ordered_cols}
+        sold_date_dtype = {col: str for col in date_columns if col in sold_cols}
+        # Read with parse_dates=False to prevent any automatic date parsing
+        ordered_df = pd.read_csv(ordered_file, dtype=ordered_date_dtype, keep_default_na=False, parse_dates=False)
+        sold_df = pd.read_csv(sold_file, dtype=sold_date_dtype, keep_default_na=False, parse_dates=False)
         
         # Parse medicine identifier (could be NDC, medicine_key, or drug_name)
         from src.normalization.medicine_key import extract_medicine_key_components, generate_medicine_key
@@ -1218,6 +1585,52 @@ async def get_medicine_entries(
         ordered_entries = ordered_df[ordered_df["medicine_key"] == medicine_key].copy()
         sold_entries = sold_df[sold_df["medicine_key"] == medicine_key].copy()
         
+        # Load DawaiRx report data for this medicine (after entries are filtered)
+        report_data = {}
+        try:
+            dawairx_file = output_base / run_id / "inventory_report.csv"
+            if dawairx_file.exists():
+                report_df = pd.read_csv(dawairx_file)
+                
+                # Find the row for this medicine
+                # Try matching by NDC or medicine_key
+                report_row = None
+                if "NDC" in report_df.columns:
+                    # Normalize NDC for comparison
+                    normalized_ndc = normalize_ndc(medicine_key.replace("NDC:", ""))
+                    if normalized_ndc:
+                        # Try to match NDC (handle different formats)
+                        for idx, row in report_df.iterrows():
+                            row_ndc = str(row["NDC"]) if pd.notna(row["NDC"]) else ""
+                            if normalized_ndc in row_ndc or row_ndc in normalized_ndc:
+                                report_row = row
+                                break
+                
+                # If not found by NDC, try by drug name
+                if report_row is None and "DRUG NAME" in report_df.columns:
+                    drug_name = sold_entries["drug_name"].iloc[0] if len(sold_entries) > 0 and "drug_name" in sold_entries.columns else None
+                    if drug_name:
+                        matching = report_df[report_df["DRUG NAME"].str.contains(drug_name, case=False, na=False)]
+                        if len(matching) > 0:
+                            report_row = matching.iloc[0]
+                
+                # Extract non-empty fields from report row
+                if report_row is not None:
+                    for col in report_df.columns:
+                        value = report_row[col]
+                        # Check if value is not empty/null/zero
+                        if pd.notna(value) and value != '' and value != 0 and value != '0' and value != 0.0:
+                            # Format the value nicely
+                            if isinstance(value, (int, float)):
+                                if isinstance(value, float) and value.is_integer():
+                                    report_data[col] = int(value)
+                                else:
+                                    report_data[col] = value
+                            else:
+                                report_data[col] = str(value)
+        except Exception as e:
+            logger.warning(f"Could not load DawaiRx report data for medicine: {e}")
+        
         # Convert to list of dictionaries for JSON response
         def format_entry(row, source_type, source_name):
             """Format a row as an entry dictionary"""
@@ -1234,11 +1647,47 @@ async def get_medicine_entries(
             for date_col in ["claim_date", "date_filled", "order_date", "invoice_date", "purchase_date"]:
                 if date_col in row and pd.notna(row[date_col]):
                     date_val = row[date_col]
-                    # Convert to string, handling datetime objects
-                    if isinstance(date_val, pd.Timestamp):
-                        entry["date"] = date_val.strftime("%Y-%m-%d")
+                    # Since we read dates as strings, date_val should be a string
+                    # Convert to string first to ensure we have a string
+                    date_str = str(date_val).strip()
+                    
+                    # If it's already in YYYY-MM-DD format, use it directly (no parsing needed)
+                    if len(date_str) == 10 and date_str.count('-') == 2 and date_str[4] == '-' and date_str[7] == '-':
+                        # Validate it's a valid date format (YYYY-MM-DD)
+                        try:
+                            # Just validate format, don't parse as date to avoid timezone issues
+                            parts = date_str.split('-')
+                            if len(parts) == 3 and all(p.isdigit() for p in parts):
+                                year, month, day = int(parts[0]), int(parts[1]), int(parts[2])
+                                # Basic validation (year reasonable, month 1-12, day 1-31)
+                                if 1900 <= year <= 2100 and 1 <= month <= 12 and 1 <= day <= 31:
+                                    entry["date"] = date_str
+                                else:
+                                    entry["date"] = date_str  # Use as-is even if invalid
+                            else:
+                                entry["date"] = date_str
+                        except:
+                            entry["date"] = date_str
                     else:
-                        entry["date"] = str(date_val)
+                        # For non-YYYY-MM-DD formats, try to parse but be careful
+                        # Only parse if absolutely necessary
+                        try:
+                            # Try to parse as naive datetime (no timezone)
+                            parsed = pd.to_datetime(date_str, errors='coerce', utc=False)
+                            if pd.notna(parsed):
+                                # Ensure timezone-naive
+                                if parsed.tz is not None:
+                                    parsed = parsed.tz_localize(None)
+                                # Extract date part only (no time, no timezone)
+                                if isinstance(parsed, pd.Timestamp):
+                                    # Use date() to get date-only, then format
+                                    entry["date"] = parsed.date().strftime("%Y-%m-%d")
+                                else:
+                                    entry["date"] = date_str
+                            else:
+                                entry["date"] = date_str
+                        except:
+                            entry["date"] = date_str
                     break
             
             # Extract quantity
@@ -1295,6 +1744,7 @@ async def get_medicine_entries(
             "sold_entries": sold_results,
             "total_ordered": len(ordered_results),
             "total_sold": len(sold_results),
+            "report_data": report_data,  # DawaiRx report fields with data
         })
     except HTTPException:
         raise

@@ -43,9 +43,9 @@ def normalize_dataframe(
     if "drug_name" in df_normalized.columns:
         if preserve_originals and "drug_name_original" not in df_normalized.columns:
             df_normalized["drug_name_original"] = df_normalized["drug_name"]
-        # CRITICAL: For BatchRX compatibility, preserve original drug name format
+        # CRITICAL: For DawaiRx compatibility, preserve original drug name format
         # Only normalize if explicitly needed (for matching), but keep original for display
-        # The batchrx_format.py will use the original format from sold_df
+        # The dawairx_format.py will use the original format from sold_df
         # For now, we still normalize for matching purposes, but preserve original
         df_normalized["drug_name"] = df_normalized["drug_name"].apply(normalize_drug_name)
     

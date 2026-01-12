@@ -1,4 +1,4 @@
-"""Extended audit rules matching BatchRx functionality"""
+"""Extended audit rules matching DawaiRx functionality"""
 
 import pandas as pd
 from typing import List, Dict, Any
@@ -331,7 +331,7 @@ class R015_RefillTooSoon(Rule):
 
 
 def create_extended_registry():
-    """Create registry with all rules including extended BatchRx-like rules."""
+    """Create registry with all rules including extended DawaiRx-like rules."""
     from src.rules.implementations import (
         R001_DuplicateClaim,
         R002_InvalidNDC,
@@ -354,7 +354,7 @@ def create_extended_registry():
     registry.register(R006_SuspiciousDaysSupply())
     registry.register(R007_MissingCriticalFields())
     
-    # Extended BatchRx-like rules
+    # Extended DawaiRx-like rules
     registry.register(R008_ExcessiveQuantity())
     registry.register(R009_PriceAnomaly())
     registry.register(R010_MissingNDC())

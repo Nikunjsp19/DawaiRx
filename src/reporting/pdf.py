@@ -27,18 +27,20 @@ def create_detailed_pdf_report(
     issues_df: pd.DataFrame,
     summary: Dict[str, Any],
     ordered_df: pd.DataFrame = None,
-    sold_df: pd.DataFrame = None
+    sold_df: pd.DataFrame = None,
+    dawairx_report: pd.DataFrame = None
 ):
     """
-    Create a detailed PDF audit report similar to BatchRx.
+    Create a detailed PDF audit report using DawaiRx format matching UI display.
     
     Args:
         output_path: Path to output PDF file
-        reconciled_df: Reconciled inventory DataFrame
+        reconciled_df: Reconciled inventory DataFrame (legacy, kept for compatibility)
         issues_df: Issues DataFrame
         summary: Summary statistics dictionary
         ordered_df: Optional ordered DataFrame for detailed view
         sold_df: Optional sold DataFrame for detailed view
+        dawairx_report: DawaiRx format report DataFrame (matches UI display)
     """
     if not REPORTLAB_AVAILABLE:
         raise ImportError("reportlab is required for PDF generation. Install with: pip install reportlab")
@@ -83,6 +85,99 @@ def create_detailed_pdf_report(
     story.append(Spacer(1, 0.3*inch))
     story.append(Paragraph(f"Generated: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", styles['Normal']))
     story.append(PageBreak())
+    
+    # If DawaiRx report is provided, use it (matches UI format)
+    if dawairx_report is not None and len(dawairx_report) > 0:
+        # Main Inventory Report Table (DawaiRx format - matches UI)
+        story.append(Paragraph("Inventory Report", heading_style))
+        
+        # Prepare data for table
+        dawairx_export = dawairx_report.copy()
+        
+        # Replace NaN/NA with empty string for display (matches UI where 0 values are blank)
+        dawairx_export = dawairx_export.fillna('')
+        # Replace 0 values with empty string to match UI (DawaiRx shows blank for 0)
+        for col in dawairx_export.columns:
+            if dawairx_export[col].dtype in ['float64', 'int64', 'Int64', 'Float64']:
+                dawairx_export[col] = dawairx_export[col].replace(0, '')
+                dawairx_export[col] = dawairx_export[col].replace(0.0, '')
+        
+        # Limit rows for PDF (show first 100 rows, then indicate more available)
+        max_rows_for_pdf = 100
+        dawairx_display = dawairx_export.head(max_rows_for_pdf)
+        
+        # Get column names
+        columns = list(dawairx_display.columns)
+        
+        # Create table data
+        table_data = [columns]  # Header row
+        
+        # Track which cells need red formatting (for negative SHORTAGE values)
+        red_cells = []
+        shortage_col_indices = [i for i, col in enumerate(columns) if 'SHORTAGE' in str(col).upper()]
+        
+        # Add data rows
+        for row_idx, (_, row) in enumerate(dawairx_display.iterrows(), start=1):
+            row_data = []
+            for col_idx, col in enumerate(columns):
+                value = row[col]
+                if value == '' or pd.isna(value):
+                    row_data.append('')
+                elif isinstance(value, (int, float)):
+                    # Format numbers
+                    if 'AMOUNT' in col or 'COST' in col:
+                        formatted_value = f"${value:,.2f}"
+                    elif 'SHORTAGE' in col and value < 0:
+                        formatted_value = f"{value:,.0f}"
+                        # Mark for red formatting
+                        red_cells.append((col_idx, row_idx))
+                    else:
+                        formatted_value = f"{value:,.0f}" if value == int(value) else f"{value:,.2f}"
+                    row_data.append(formatted_value)
+                else:
+                    row_data.append(str(value)[:30])  # Truncate long strings
+            table_data.append(row_data)
+        
+        # Create table with appropriate column widths
+        num_cols = len(columns)
+        col_widths = [1.2*inch] * min(num_cols, 10)  # Limit to 10 columns for readability
+        if num_cols > 10:
+            col_widths = [0.8*inch] * num_cols  # Narrower columns if many columns
+        
+        # Build table style
+        table_style = [
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2563eb')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),  # Right align numeric columns
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f9fafb')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]
+        
+        # Add red formatting for negative SHORTAGE values
+        for col_idx, row_idx in red_cells:
+            table_style.append(('TEXTCOLOR', (col_idx, row_idx), (col_idx, row_idx), colors.HexColor('#ef4444')))
+            table_style.append(('FONTNAME', (col_idx, row_idx), (col_idx, row_idx), 'Helvetica-Bold'))
+        
+        inventory_table = Table(table_data, colWidths=col_widths[:num_cols] if num_cols <= len(col_widths) else [0.6*inch] * num_cols)
+        inventory_table.setStyle(TableStyle(table_style))
+        
+        story.append(inventory_table)
+        
+        if len(dawairx_export) > max_rows_for_pdf:
+            story.append(Spacer(1, 0.1*inch))
+            story.append(Paragraph(
+                f"<i>Showing first {max_rows_for_pdf} of {len(dawairx_export)} total medicines. See full CSV export for complete list.</i>",
+                styles['Normal']
+            ))
+        
+        story.append(PageBreak())
     
     # Executive Summary
     story.append(Paragraph("Executive Summary", heading_style))

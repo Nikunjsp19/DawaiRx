@@ -268,10 +268,15 @@ class RunStore:
                 query = {"user_id": user_id}
                 logger.debug(f"Querying runs with: user_id={user_id}, limit={limit}, offset={offset}")
                 
+                # Fetch more documents than needed to account for filtering out empty reports
+                # We'll filter and then return only the requested amount
+                # Fetch 3x the limit to ensure we have enough after filtering
+                fetch_limit = max(limit * 3, 30)  # At least 30, or 3x the requested limit
+                
                 cursor = self.runs_collection.find(
                     query,
                     projection=projection
-                ).sort("created_at", -1).skip(offset).limit(limit).max_time_ms(10000).batch_size(limit)  # 10 second max
+                ).sort("created_at", -1).skip(offset).limit(fetch_limit).max_time_ms(10000).batch_size(fetch_limit)  # 10 second max
                 
                 # Convert cursor to list immediately
                 docs = list(cursor)
@@ -285,7 +290,7 @@ class RunStore:
                 logger.error(f"   Traceback: {traceback.format_exc()}")
                 return []
             
-            # Fast conversion
+            # Fast conversion and filter out empty reports
             runs = []
             for doc in docs:
                 try:
@@ -305,7 +310,22 @@ class RunStore:
                     if "stats" not in doc or doc["stats"] is None:
                         doc["stats"] = {}
                     
-                    runs.append(doc)
+                    # Filter out empty reports (no data) - don't show in dashboard/history
+                    stats = doc.get("stats", {})
+                    has_data = (
+                        stats.get("total_medicines", 0) > 0 or
+                        stats.get("total_ordered", 0) > 0 or
+                        stats.get("total_sold", 0) > 0
+                    )
+                    
+                    # Only include reports that have data
+                    if has_data:
+                        runs.append(doc)
+                        # Stop once we have enough reports
+                        if len(runs) >= limit:
+                            break
+                    else:
+                        logger.debug(f"⏭️ Filtering out empty report: {doc.get('run_id', 'unknown')}")
                 except Exception as conv_error:
                     logger.warning(f"Error converting document: {conv_error}, doc keys: {list(doc.keys())}")
                     # Skip this document but continue
@@ -315,7 +335,7 @@ class RunStore:
             if elapsed > 1.0:
                 logger.warning(f"⚠️ Slow query: list_runs took {elapsed:.3f}s for user {user_id} ({len(runs)} runs)")
             else:
-                logger.info(f"✅ list_runs: {elapsed:.3f}s, {len(runs)} runs for user {user_id}")
+                logger.info(f"✅ list_runs: {elapsed:.3f}s, {len(runs)} runs for user {user_id} (requested {limit}, fetched {len(docs)}, filtered to {len(runs)})")
             
             return runs
         except Exception as e:

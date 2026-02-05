@@ -50,21 +50,28 @@ app.add_middleware(
 # Add compression middleware for faster responses
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# Pre-warm MongoDB connection on startup
+# Pre-warm MongoDB connection on startup (non-blocking - runs in background)
+# This allows the server to start listening immediately, avoiding Azure container timeout
 @app.on_event("startup")
 async def startup_event():
-    """Pre-warm MongoDB connection pool on server startup"""
-    try:
-        logger.info("🔥 Pre-warming MongoDB connection pool...")
-        from src.persistence.connection_pool import get_mongo_client
-        import time
-        start = time.time()
-        client = get_mongo_client()
-        client.server_info()  # Test connection
-        elapsed = time.time() - start
-        logger.info(f"✅ MongoDB connection pool pre-warmed in {elapsed:.2f}s")
-    except Exception as e:
-        logger.warning(f"⚠️ Could not pre-warm connection (will connect on first request): {e}")
+    """Pre-warm MongoDB connection pool in background - don't block server startup"""
+    import threading
+
+    def _prewarm():
+        try:
+            logger.info("🔥 Pre-warming MongoDB connection pool (background)...")
+            from src.persistence.connection_pool import get_mongo_client
+            import time
+            start = time.time()
+            client = get_mongo_client()
+            client.server_info()  # Test connection
+            elapsed = time.time() - start
+            logger.info(f"✅ MongoDB connection pool pre-warmed in {elapsed:.2f}s")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not pre-warm connection (will connect on first request): {e}")
+
+    # Run in background thread - server starts listening immediately
+    threading.Thread(target=_prewarm, daemon=True).start()
 
 # Add custom validation error handler to see exact errors
 @app.exception_handler(RequestValidationError)
@@ -104,6 +111,12 @@ output_base.mkdir(parents=True, exist_ok=True)
 async def favicon():
     """Return empty favicon to prevent 404 errors"""
     return Response(status_code=204)  # No Content
+
+
+@app.get("/health")
+async def health():
+    """Lightweight health check - responds immediately for Azure/load balancer readiness"""
+    return {"status": "ok"}
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):

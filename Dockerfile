@@ -29,12 +29,16 @@ EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-# Health check (simple check if server responds)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD python -c "import socket; s=socket.socket(); s.connect(('localhost', 8000)); s.close()" || exit 1
+# Health check - use /health endpoint (lightweight, no MongoDB dependency)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)" || exit 1
+
+# Copy and use startup script (helps capture errors in Azure logs)
+COPY scripts/start.sh /app/scripts/start.sh
+RUN chmod +x /app/scripts/start.sh
 
 # Run the application
 # Azure provides PORT env var, the web command will read it automatically
 # Use 0.0.0.0 to accept connections from outside the container
-CMD ["python", "-m", "src.cli.main", "web", "--host", "0.0.0.0"]
+CMD ["/app/scripts/start.sh"]
 

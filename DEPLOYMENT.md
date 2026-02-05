@@ -1,5 +1,7 @@
 # Docker Deployment to Azure Free Tier - Step by Step Guide
 
+> **📱 Prefer using the Azure Portal UI?** See **[DEPLOYMENT-UI.md](./DEPLOYMENT-UI.md)** for a complete step-by-step guide using the web interface (no command line needed)!
+
 ## Prerequisites
 
 1. **Azure Account** (Free tier available at https://azure.microsoft.com/free/)
@@ -64,14 +66,16 @@ az acr login --name dawairxregistry
 
 ```bash
 # Build and push image to Azure Container Registry
-# This will build locally and push to Azure
+# MUST use az acr build - it builds for linux/amd64 (Azure's architecture)
+# If you use "docker build" + "docker push" on Mac M1/M2, you'll get "exec format error"
 az acr build \
   --registry dawairxregistry \
   --image dawairx:latest \
-  --file Dockerfile .
+  --file Dockerfile . \
+  --platform linux/amd64
 ```
 
-**Note:** This command builds the image in Azure Cloud, so you don't need Docker installed locally!
+**Important:** Always use `az acr build` (not `docker build` + `docker push`). On Mac with Apple Silicon, a locally-built image is arm64 and will fail on Azure with "exec format error".
 
 ---
 

@@ -81,3 +81,6 @@ stitch_run_progress_status*/
 # Process IDs
 *.pid
 web_server.pid
+
+# GitHub secrets (contains sensitive credentials)
+.github/SETUP-AZURE-SECRETS.md

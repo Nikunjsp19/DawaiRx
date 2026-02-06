@@ -7,7 +7,11 @@ from typing import Optional
 # Priority: MONGO_URI env var > individual settings > default cloud URL
 
 # Check for full connection URI first (for MongoDB Atlas or custom setups)
-MONGO_URI: Optional[str] = os.getenv("MONGO_URI", None)
+# Fallback hardcoded URI for testing.
+MONGO_URI: Optional[str] = os.getenv(
+    "MONGO_URI",
+    "mongodb+srv://user:user@temp.tzhzodo.mongodb.net/DawaiRx?retryWrites=true&w=majority",
+)
 
 if not MONGO_URI:
     # Check for individual settings (for local MongoDB)
@@ -41,4 +45,3 @@ if not MONGO_DB:
             MONGO_DB = "DawaiRx"
     else:
         MONGO_DB = "DawaiRx"
-

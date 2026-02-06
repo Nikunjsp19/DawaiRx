@@ -14,7 +14,7 @@ A local-only pharmacy audit/reconciliation application for comparing ordered and
 ## Requirements
 
 - Python 3.11 or higher
-- MongoDB (via Docker recommended)
+- MongoDB (Atlas recommended)
 - pip
 
 ## Quick Start
@@ -34,15 +34,18 @@ make install
 # OR: pip install -r requirements.txt
 ```
 
-### 2. Start MongoDB
+### 2. Configure MongoDB
+
+Set a MongoDB connection string (Atlas recommended):
 
 ```bash
-# Start MongoDB using Docker Compose
-make docker-up
-# OR: docker-compose up -d
+export MONGO_URI="mongodb+srv://username:password@cluster.mongodb.net/DawaiRx?retryWrites=true&w=majority"
+```
 
-# Verify MongoDB is running
-make mongo-test
+If you run MongoDB locally, set `MONGO_URI` to your local connection string:
+
+```bash
+export MONGO_URI="mongodb://localhost:27017/dawai_rx"
 ```
 
 ### 3. Run Tests
@@ -114,7 +117,6 @@ DawaiRx/
 ├── out/                # Output directory (generated)
 ├── requirements.txt
 ├── pyproject.toml
-├── docker-compose.yml
 └── Makefile
 ```
 
@@ -139,22 +141,54 @@ make clean
 
 ## MongoDB Connection
 
-**Default**: MongoDB Atlas cloud connection
-- Connection: `mongodb+srv://user:user@temp.tzhzodo.mongodb.net/DawaiRx`
+**Recommended**: MongoDB Atlas cloud connection  
+Set `MONGO_URI` with your own connection string.
 
-**To use local MongoDB instead:**
+**Local MongoDB**:
 ```bash
-# Set environment variable
 export MONGO_URI="mongodb://localhost:27017/dawai_rx"
-
-# OR start local MongoDB with Docker
-make docker-up
 ```
 
 **To customize connection:**
 - Set `MONGO_URI` environment variable with your connection string
-- Or create a `.env` file (see `.env.example`)
 - Or modify `src/persistence/config.py`
+
+## Deploy to Azure (Simple GitHub → App Service)
+
+This is the simplest path: push to GitHub, and Azure deploys automatically.
+
+### 1. Create the Azure Web App (Code, not Docker)
+1. Azure Portal → **Create resource** → **Web App**
+2. **Publish**: `Code`
+3. **Runtime**: `Python 3.11`
+4. **Operating system**: Linux
+5. **Plan**: your Basic B1 plan
+
+### 2. Configure App Settings
+Azure Portal → your Web App → **Configuration** → **Application settings**
+Add:
+- `MONGO_URI` = your MongoDB connection string
+- `SECRET_KEY` = any strong random string
+- `PORT` = `8000`
+
+Then **Save** (this restarts the app).
+
+### 3. Set Startup Command
+Azure Portal → your Web App → **Configuration** → **General settings**
+Set **Startup Command**:
+```
+python -m src.cli.main web --host 0.0.0.0 --port 8000
+```
+
+### 4. Add GitHub Actions Deployment
+1. In Azure Portal → **Deployment Center**
+2. Choose **GitHub** and connect your repo
+3. Azure will create a workflow in `.github/workflows/`
+
+Or use the included workflow below (see `DEPLOYMENT-AZURE-GITHUB.md`).
+
+### 5. Push to GitHub
+Any push to `main` deploys automatically.
 
 ## Status
 
@@ -169,4 +203,3 @@ make docker-up
 ## License
 
 MIT
-

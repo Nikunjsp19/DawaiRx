@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from fastapi import HTTPException, status
 
-# JWT secret key from environment variable
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+# JWT secret key from environment variable (fallback hardcoded for testing)
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "5625233097")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 
@@ -60,4 +60,3 @@ def decode_access_token(token: str) -> Dict[str, Any]:
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-

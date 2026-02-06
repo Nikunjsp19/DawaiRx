@@ -1,4 +1,4 @@
-.PHONY: help install lint test run clean docker-up docker-down mongo-test
+.PHONY: help install lint test run clean mongo-test web
 
 help:
 	@echo "Available commands:"
@@ -6,9 +6,8 @@ help:
 	@echo "  make lint         - Run linters (black, flake8)"
 	@echo "  make test         - Run tests"
 	@echo "  make run          - Run the CLI (placeholder)"
-	@echo "  make docker-up    - Start MongoDB container"
-	@echo "  make docker-down  - Stop MongoDB container"
 	@echo "  make mongo-test   - Test MongoDB connection"
+	@echo "  make web          - Start the web UI"
 	@echo "  make clean        - Clean temporary files"
 
 install:
@@ -31,15 +30,6 @@ run:
 web:
 	python -m src.cli.main web
 
-docker-up:
-	docker-compose up -d
-	@echo "Waiting for MongoDB to be ready..."
-	@sleep 5
-	@make mongo-test
-
-docker-down:
-	docker-compose down
-
 mongo-test:
 	python -m src.persistence.mongo_test
 
@@ -53,4 +43,3 @@ clean:
 	rm -rf dist/
 	rm -rf build/
 	rm -rf *.egg-info
-

@@ -112,7 +112,6 @@ DawaiRx/
 │   └── web/            # Web UI (FastAPI)
 ├── tests/              # Unit tests
 ├── config/             # Configuration files
-├── scripts/            # Utility scripts (password reset, setup verification)
 ├── sample_data/        # Sample input files
 ├── out/                # Output directory (generated)
 ├── requirements.txt

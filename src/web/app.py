@@ -29,7 +29,7 @@ except ImportError:
     USE_EXTENDED_RULES = False
 from src.reporting.excel import create_audit_report
 from src.persistence.store import RunStore
-from src.auth.models import UserLogin, TokenResponse, UserCreate, UserUpdate, UserUpdate
+from src.auth.models import UserLogin, TokenResponse, UserCreate, UserUpdate
 from src.auth.user_store import UserStore
 from src.auth.utils import create_access_token, verify_password
 from src.auth.middleware import get_current_user_id

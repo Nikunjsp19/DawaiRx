@@ -652,7 +652,10 @@ def create_dawairx_report(
     remaining_suppliers.sort()
     
     supplier_columns = ordered_suppliers + remaining_suppliers
-    logger.info(f"   Supplier columns order: {[col.replace('ORDERED\\n', '').replace('-O', '') for col in supplier_columns]}")
+    cleaned_supplier_columns = [
+        col.replace("ORDERED\n", "").replace("-O", "") for col in supplier_columns
+    ]
+    logger.info(f"   Supplier columns order: {cleaned_supplier_columns}")
     
     # Separate CASH columns from other insurance columns (CASH should be at end)
     cash_columns = [col for col in insurance_columns if "CASH" in col.upper()]
@@ -738,4 +741,3 @@ def create_dawairx_report(
     logger.info(f"Created DawaiRx-style report: {output_path} ({len(report_df)} rows)")
     
     return report_df
-

@@ -1,7 +1,7 @@
 name: Deploy to Azure Web App
 
 env:
-  AZURE_WEBAPP_NAME: your-app-name
+  AZURE_WEBAPP_NAME: DawaiRx
   PYTHON_VERSION: "3.11"
 
 on:

@@ -16,23 +16,51 @@ from typing import Optional, List
 import uuid
 import csv
 from datetime import datetime
+# Lazy import of rules registry - don't load until needed (saves ~10s on startup)
+# from src.rules.implementations import create_default_registry
+# try:
+#     from src.rules.implementations_extended import create_extended_registry
+#     USE_EXTENDED_RULES = True
+# except ImportError:
+#     USE_EXTENDED_RULES = False
 
-import pandas as pd
-from src.ingestion.processor import process_file, validate_inputs
-from src.normalization.processor import normalize_dataframe
-from src.reconciliation.engine import reconcile_inventory, generate_summary
-from src.rules.implementations import create_default_registry
-try:
-    from src.rules.implementations_extended import create_extended_registry
-    USE_EXTENDED_RULES = True
-except ImportError:
-    USE_EXTENDED_RULES = False
-from src.reporting.excel import create_audit_report
-from src.persistence.store import RunStore
-from src.auth.models import UserLogin, TokenResponse, UserCreate, UserUpdate
+# Lazy registry loader - only imports when actually needed
+_default_registry = None
+_extended_registry = None
+USE_EXTENDED_RULES = None
+
+def get_default_registry():
+    """Lazy loader for default rules registry"""
+    global _default_registry
+    if _default_registry is None:
+        from src.rules.implementations import create_default_registry
+        _default_registry = create_default_registry()
+    return _default_registry
+
+def get_extended_registry():
+    """Lazy loader for extended rules registry"""
+    global _extended_registry, USE_EXTENDED_RULES
+    if USE_EXTENDED_RULES is None:
+        try:
+            from src.rules.implementations_extended import create_extended_registry
+            _extended_registry = create_extended_registry()
+            USE_EXTENDED_RULES = True
+        except ImportError:
+            USE_EXTENDED_RULES = False
+    return _extended_registry if USE_EXTENDED_RULES else None
+
+def get_run_store():
+    """Lazy loader for RunStore (avoids heavy imports on startup)."""
+    from src.persistence.store import RunStore
+    return RunStore()
+from src.auth.models import (
+    UserLogin, TokenResponse, UserCreate, UserUpdate,
+    RegistrationRequest, RegistrationRequestResponse
+)
 from src.auth.user_store import UserStore
+from src.auth.request_store import RegistrationRequestStore
 from src.auth.utils import create_access_token, verify_password
-from src.auth.middleware import get_current_user_id
+from src.auth.middleware import get_current_user_id, require_admin, is_admin
 
 logger = logging.getLogger(__name__)
 
@@ -63,15 +91,22 @@ async def startup_event():
             from src.persistence.connection_pool import get_mongo_client
             import time
             start = time.time()
+            # Just create the client, don't test connection (non-blocking)
             client = get_mongo_client()
-            client.server_info()  # Test connection
-            elapsed = time.time() - start
-            logger.info(f"✅ MongoDB connection pool pre-warmed in {elapsed:.2f}s")
+            # Test connection in background without blocking
+            try:
+                client.server_info()  # Test connection
+                elapsed = time.time() - start
+                logger.info(f"✅ MongoDB connection pool pre-warmed in {elapsed:.2f}s")
+            except Exception as e:
+                logger.warning(f"⚠️ MongoDB connection test failed (will retry on first request): {e}")
         except Exception as e:
             logger.warning(f"⚠️ Could not pre-warm connection (will connect on first request): {e}")
 
     # Run in background thread - server starts listening immediately
+    # Use daemon=True so it doesn't block server shutdown
     threading.Thread(target=_prewarm, daemon=True).start()
+    logger.info("🚀 Server starting - MongoDB will connect in background")
 
 # Add custom validation error handler to see exact errors
 @app.exception_handler(RequestValidationError)
@@ -139,6 +174,12 @@ async def new_report_page(request: Request):
 async def settings_page(request: Request):
     """Profile settings page - check auth in frontend"""
     return templates.TemplateResponse("settings.html", {"request": request})
+
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_page(request: Request):
+    """Admin panel page - check auth in frontend"""
+    return templates.TemplateResponse("admin.html", {"request": request})
 
 
 @app.put("/api/auth/settings")
@@ -226,10 +267,85 @@ async def login(login_data: UserLogin):
             detail="Login failed"
         )
 
+@app.post("/api/auth/request-access")
+async def request_access(request_data: RegistrationRequest):
+    """Submit a registration request"""
+    try:
+        request_store = RegistrationRequestStore()
+        request_doc = request_store.create_request(request_data)
+        
+        return RegistrationRequestResponse(
+            request_id=str(request_doc.id),
+            user_id=request_doc.user_id,
+            email=request_doc.email,
+            status=request_doc.status,
+            requested_at=request_doc.requested_at,
+            message="Registration request submitted successfully. Admin will review your request."
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Request access error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to submit registration request"
+        )
+
+
+@app.get("/api/auth/check-approval/{user_id}")
+async def check_approval(user_id: str):
+    """Check if a user_id has been approved for registration"""
+    try:
+        request_store = RegistrationRequestStore()
+        request_doc = request_store.get_request_by_user_id(user_id)
+        
+        if not request_doc:
+            return {"approved": False, "status": "not_requested", "message": "No registration request found"}
+        
+        return {
+            "approved": request_doc.status == "approved",
+            "status": request_doc.status,
+            "message": {
+                "pending": "Your registration request is pending admin approval.",
+                "approved": "Your registration request has been approved! You can now register.",
+                "rejected": "Your registration request was rejected. Please contact admin."
+            }.get(request_doc.status, "Unknown status")
+        }
+    except Exception as e:
+        logger.error(f"Check approval error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to check approval status"
+        )
+
+
 @app.post("/api/auth/register")
 async def register(user_data: UserCreate):
-    """Register a new user"""
+    """Register a new user (requires approved registration request)"""
     try:
+        # Check if user has an approved registration request
+        request_store = RegistrationRequestStore()
+        if not request_store.is_approved(user_data.user_id):
+            request_doc = request_store.get_request_by_user_id(user_data.user_id)
+            if request_doc and request_doc.status == "pending":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Your registration request is pending admin approval. Please wait for approval before registering."
+                )
+            elif request_doc and request_doc.status == "rejected":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Your registration request was rejected. Please contact admin or submit a new request."
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Please submit a registration request first and wait for admin approval."
+                )
+        
         user_store = UserStore()
         user = user_store.create_user(user_data)
         
@@ -241,6 +357,8 @@ async def register(user_data: UserCreate):
             token_type="bearer",
             user_id=user.user_id
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -252,6 +370,119 @@ async def register(user_data: UserCreate):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Registration failed"
         )
+
+
+# Admin endpoints
+@app.get("/api/admin/requests")
+async def get_registration_requests(
+    status_filter: Optional[str] = None,
+    admin_user_id: str = Depends(require_admin)
+):
+    """Get all registration requests (admin only)"""
+    try:
+        request_store = RegistrationRequestStore()
+        
+        # Filter by status if provided
+        if status_filter and status_filter in ["pending", "approved", "rejected"]:
+            requests = request_store.get_requests_by_status(status_filter)
+        elif status_filter == "pending":
+            # Keep backward compatibility
+            requests = request_store.get_pending_requests()
+        else:
+            # Get all requests
+            requests = request_store.get_all_requests()
+        
+        return {
+            "requests": [
+                {
+                    "id": str(req.id),
+                    "user_id": req.user_id,
+                    "email": req.email,
+                    "reason": req.reason,
+                    "company": req.company,
+                    "status": req.status,
+                    "requested_at": req.requested_at.isoformat(),
+                    "reviewed_at": req.reviewed_at.isoformat() if req.reviewed_at else None,
+                    "reviewed_by": req.reviewed_by,
+                    "admin_notes": req.admin_notes
+                }
+                for req in requests
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Get requests error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve registration requests"
+        )
+
+
+@app.post("/api/admin/approve-request/{user_id}")
+async def approve_request(
+    user_id: str,
+    request: Request,
+    admin_user_id: str = Depends(require_admin)
+):
+    """Approve a registration request (admin only)"""
+    try:
+        body = await request.json() if request.headers.get("content-type") == "application/json" else {}
+        admin_notes = body.get("admin_notes")
+        
+        request_store = RegistrationRequestStore()
+        success = request_store.approve_request(user_id, admin_user_id, admin_notes)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No pending registration request found for '{user_id}'"
+            )
+        
+        return {"message": f"Registration request for '{user_id}' has been approved"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Approve request error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to approve registration request"
+        )
+
+
+@app.post("/api/admin/reject-request/{user_id}")
+async def reject_request(
+    user_id: str,
+    request: Request,
+    admin_user_id: str = Depends(require_admin)
+):
+    """Reject a registration request (admin only)"""
+    try:
+        body = await request.json() if request.headers.get("content-type") == "application/json" else {}
+        admin_notes = body.get("admin_notes")
+        
+        request_store = RegistrationRequestStore()
+        success = request_store.reject_request(user_id, admin_user_id, admin_notes)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No pending registration request found for '{user_id}'"
+            )
+        
+        return {"message": f"Registration request for '{user_id}' has been rejected"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Reject request error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reject registration request"
+        )
+
+
+@app.get("/api/admin/is-admin")
+async def check_admin_status(user_id: str = Depends(get_current_user_id)):
+    """Check if current user is admin"""
+    return {"is_admin": is_admin(user_id)}
 
 @app.post("/api/upload")
 async def upload_files(
@@ -400,6 +631,11 @@ async def run_comparison(
     start_time = time.time()
     logger.info(f"🚀 Starting reconciliation for user {user_id}, session {session_id}")
     logger.info(f"   Request received at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    from src.ingestion.processor import process_file
+    from src.normalization.processor import normalize_dataframe
+    from src.reconciliation.engine import reconcile_inventory, generate_summary
+    from src.reporting.excel import create_audit_report
+    import pandas as pd
     try:
         session_dir = upload_dir / session_id
         if not session_dir.exists():
@@ -608,9 +844,11 @@ async def run_comparison(
         
         # Run rules (use extended if available)
         if USE_EXTENDED_RULES:
-            rule_registry = create_extended_registry()
+            rule_registry = get_extended_registry()
+            if rule_registry is None:
+                rule_registry = get_default_registry()
         else:
-            rule_registry = create_default_registry()
+            rule_registry = get_default_registry()
         issues = rule_registry.run_all({
             "ordered": ordered_normalized,
             "sold": sold_normalized,
@@ -890,7 +1128,7 @@ async def run_comparison(
         saved_run_id = run_id
         if has_data:
             try:
-                store = RunStore()
+                store = get_run_store()
                 # Prepare config metadata with date range and report name
                 config_metadata = {
                     "date_from": date_from,
@@ -1083,7 +1321,7 @@ async def list_runs(
     try:
         # Initialize RunStore (connection pool should already be warm)
         try:
-            store = RunStore()
+            store = get_run_store()
         except Exception as init_error:
             logger.error(f"❌ Failed to initialize RunStore: {init_error}")
             import traceback
@@ -1134,7 +1372,7 @@ async def list_runs(
 async def delete_run(run_id: str, user_id: str = Depends(get_current_user_id)):
     """Delete a run and all associated data for authenticated user"""
     try:
-        store = RunStore()
+        store = get_run_store()
         success = store.delete_run(user_id=user_id, run_id=run_id)
         
         if success:
@@ -1155,7 +1393,7 @@ async def delete_run(run_id: str, user_id: str = Depends(get_current_user_id)):
 async def get_run(run_id: str, user_id: str = Depends(get_current_user_id)):
     """Get run details for authenticated user"""
     try:
-        store = RunStore()
+        store = get_run_store()
         run = store.get_run(user_id=user_id, run_id=run_id)
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
@@ -1248,7 +1486,7 @@ async def download_file(run_id: str, file_type: str, user_id: str = Depends(get_
     """Download output file for authenticated user"""
     try:
         # Verify user owns this run
-        store = RunStore()
+        store = get_run_store()
         run = store.get_run(user_id=user_id, run_id=run_id)
         
         if not run:
@@ -1359,7 +1597,7 @@ async def get_medicine_entries(
     """Get source entries for a specific medicine from uploaded files"""
     try:
         # Verify user owns this run
-        store = RunStore()
+        store = get_run_store()
         run = store.get_run(user_id=user_id, run_id=run_id)
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
@@ -1770,4 +2008,3 @@ async def get_medicine_entries(
 async def runs_page(request: Request):
     """Runs listing page - check auth in frontend"""
     return templates.TemplateResponse("runs.html", {"request": request})
-

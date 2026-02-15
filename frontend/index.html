@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DawaiRx</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" />
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" defer></script>
+  </head>
+  <body>
+    <div id="root">
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif;color:#64748b;">
+        <p>Loading DawaiRx…</p>
+      </div>
+    </div>
+    <script>
+      // Capture load errors so we can show them if React never mounts
+      window.__loadError = null;
+      window.onerror = function(msg, src, line, col, err) {
+        window.__loadError = msg + (src ? ' at ' + src + ':' + line : '') + (err && err.stack ? '\n' + err.stack : '');
+        return false;
+      };
+      window.onunhandledrejection = function(e) {
+        window.__loadError = (e.reason && (e.reason.message || String(e.reason))) || 'Unhandled promise rejection';
+      };
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // If React hasn't mounted after 8s, show a hint and any captured error
+      setTimeout(function () {
+        var root = document.getElementById('root');
+        if (!root || root.textContent.indexOf('Loading DawaiRx') === -1) return;
+        var err = window.__loadError || '';
+        var errBlock = err ? '<pre style="text-align:left;max-width:500px;margin:16px auto;padding:12px;background:#fef2f2;border-radius:8px;font-size:12px;overflow:auto">' + (err.replace(/</g, '&lt;')) + '</pre>' : '';
+        root.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif;color:#64748b;padding:24px;text-align:center"><p style="font-size:18px;margin-bottom:12px">Still loading?</p>' + errBlock + '<p style="font-size:14px;max-width:400px">Check that the backend is running on port 8080 and the frontend on 5173. Open DevTools (F12) for more errors, then refresh.</p><button onclick="location.reload()" style="margin-top:16px;padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px">Reload</button></div>';
+      }, 8000);
+    </script>
+  </body>
+</html>

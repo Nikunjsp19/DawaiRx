@@ -29,24 +29,44 @@ class RunStore:
             mongo_uri: MongoDB connection URI (ignored - uses pool)
             db_name: Database name (ignored - uses pool)
         """
-        try:
-            # Use connection pool instead of creating new connections
-            self.db = get_database()
-            self.runs_collection: Collection = self.db["runs"]
-            self.run_items_collection: Collection = self.db["run_items"]
-            self.run_issues_collection: Collection = self.db["run_issues"]
-            
-            # Create indexes for performance (idempotent - safe to call multiple times)
-            # Don't fail if indexes can't be created
+        # Don't connect immediately - lazy initialization
+        self._db = None
+        self._runs_collection = None
+        self._run_items_collection = None
+        self._run_issues_collection = None
+    
+    @property
+    def db(self):
+        """Lazy database access - only connects when needed"""
+        if self._db is None:
+            self._db = get_database()
+        return self._db
+    
+    @property
+    def runs_collection(self) -> Collection:
+        """Lazy collection access - only connects when needed"""
+        if self._runs_collection is None:
+            self._runs_collection = self.db["runs"]
+            # Create indexes only when first accessed
             try:
                 self._ensure_indexes()
             except Exception as index_error:
                 logger.warning(f"Could not create indexes (non-critical): {index_error}")
-        except Exception as e:
-            logger.error(f"Failed to initialize RunStore: {e}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            raise
+        return self._runs_collection
+    
+    @property
+    def run_items_collection(self) -> Collection:
+        """Lazy collection access"""
+        if self._run_items_collection is None:
+            self._run_items_collection = self.db["run_items"]
+        return self._run_items_collection
+    
+    @property
+    def run_issues_collection(self) -> Collection:
+        """Lazy collection access"""
+        if self._run_issues_collection is None:
+            self._run_issues_collection = self.db["run_issues"]
+        return self._run_issues_collection
     
     def _ensure_indexes(self):
         """Create indexes for faster queries (background creation for speed)"""
@@ -377,6 +397,53 @@ class RunStore:
             logger.warning(f"⚠️ Failed to count runs for user {user_id}: {e}")
             # Return 0 on any error - better than hanging
             return 0
+    
+    def get_report_counts_by_user_since(self, since: datetime) -> List[Dict[str, Any]]:
+        """
+        Admin-only: get report (run) count per user for runs created on or after `since`.
+        Returns list of { "user_id": str, "report_count": int } sorted by report_count descending.
+        """
+        return self.get_report_counts_by_user(since=since)
+
+    def get_report_counts_by_user(
+        self,
+        since: Optional[datetime] = None,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
+        user_query: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Admin-only: report count per user for runs in the given range.
+        Use either (since) or (from_date, to_date). Optionally filter by user_query (substring on user_id).
+        """
+        try:
+            match: Dict[str, Any] = {}
+            if since is not None:
+                match["created_at"] = {"$gte": since}
+            elif from_date is not None or to_date is not None:
+                if from_date is not None:
+                    match.setdefault("created_at", {})["$gte"] = from_date
+                if to_date is not None:
+                    match.setdefault("created_at", {})["$lte"] = to_date
+            else:
+                from datetime import timedelta
+                since = datetime.utcnow() - timedelta(days=30)
+                match["created_at"] = {"$gte": since}
+            if user_query and user_query.strip():
+                import re
+                pattern = re.escape(user_query.strip())
+                match["user_id"] = {"$regex": pattern, "$options": "i"}
+            pipeline = [
+                {"$match": match},
+                {"$group": {"_id": "$user_id", "report_count": {"$sum": 1}}},
+                {"$sort": {"report_count": -1}},
+                {"$project": {"user_id": "$_id", "report_count": 1, "_id": 0}},
+            ]
+            cursor = self.runs_collection.aggregate(pipeline, maxTimeMS=15000)
+            return list(cursor)
+        except PyMongoError as e:
+            logger.error(f"Failed to get report counts by user: {e}")
+            return []
     
     def get_run(self, user_id: str, run_id: str) -> Optional[Dict[str, Any]]:
         """

@@ -21,7 +21,7 @@ def get_mongo_client() -> MongoClient:
     global _client
     
     if _client is not None:
-        # Quick health check
+        # Quick health check (non-blocking, don't wait)
         try:
             _client.server_info()
             return _client
@@ -32,15 +32,16 @@ def get_mongo_client() -> MongoClient:
     with _lock:
         if _client is None:
             try:
-                logger.info(f"🔌 Connecting to MongoDB...")
+                logger.info(f"🔌 Creating MongoDB client (lazy connection)...")
                 
-                # Connection options - optimized for reliability
+                # Connection options - optimized for instant startup
+                # Set very short timeouts and don't connect immediately
                 connect_options = {
-                    "serverSelectionTimeoutMS": 10000,
-                    "socketTimeoutMS": 20000,
-                    "connectTimeoutMS": 10000,
+                    "serverSelectionTimeoutMS": 5000,  # Fail fast if MongoDB unavailable
+                    "socketTimeoutMS": 10000,
+                    "connectTimeoutMS": 5000,
                     "maxPoolSize": 50,
-                    "minPoolSize": 1,
+                    "minPoolSize": 0,  # Don't create any connections on startup
                     "retryWrites": True,
                 }
                 
@@ -51,14 +52,12 @@ def get_mongo_client() -> MongoClient:
                 
                 _client = MongoClient(MONGO_URI, **connect_options)
                 
-                # Test connection
-                _client.server_info()
-                
-                logger.info(f"✅ MongoDB connected: {MONGO_DB}")
+                # Don't test connection - let it connect lazily on first actual operation
+                logger.info(f"✅ MongoDB client created (will connect on first operation): {MONGO_DB}")
                 return _client
                 
             except Exception as e:
-                logger.error(f"❌ MongoDB connection failed: {e}")
+                logger.error(f"❌ MongoDB client creation failed: {e}")
                 _client = None
                 raise
     

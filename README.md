@@ -48,13 +48,24 @@ If you run MongoDB locally, set `MONGO_URI` to your local connection string:
 export MONGO_URI="mongodb://localhost:27017/dawai_rx"
 ```
 
-### 3. Run Tests
+### 3. Configure Admin User
+
+Admins are stored in MongoDB. Add an admin directly in the `admins` collection:
+
+```javascript
+// In MongoDB shell or Compass
+db.admins.insertOne({ "user_id": "your-admin@email.com" })
+```
+
+To add more admins, insert additional documents. To remove an admin: `db.admins.deleteOne({ "user_id": "..." })`
+
+### 4. Run Tests
 
 ```bash
 make test
 ```
 
-### 4. Usage
+### 5. Usage
 
 #### CLI Usage
 
@@ -89,6 +100,29 @@ python -m src.cli.main web
 
 # Open browser to http://127.0.0.1:8000
 ```
+
+#### React + Spring Boot (New Stack)
+
+The project also includes a React frontend and Spring Boot backend for parity with the legacy Python web app.
+
+**Prerequisites:** Java 17, Maven, Node.js 18+, MongoDB (same as legacy).
+
+**Run backend (port 8080):**
+```bash
+make run-backend
+# OR: cd backend && mvn spring-boot:run
+```
+Backend API: http://localhost:8080
+
+**Run frontend (port 5173):**  
+In a second terminal:
+```bash
+make run-frontend
+# OR: cd frontend && npm install && npm run dev
+```
+Frontend UI: http://localhost:5173
+
+Configure MongoDB in `backend/src/main/resources/application.yml` (or override with env) so the backend can connect. The frontend proxies API requests to the backend when running in dev.
 
 The web UI provides:
 - File upload interface

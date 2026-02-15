@@ -503,13 +503,34 @@
             renderSortedTable(runId, reportData);
         };
         
+        function isBaseColumnForCompact(col) {
+            const n = (col || '').replace(/\n/g, ' ').trim();
+            return ['NDC', 'DRUG NAME', 'RANK', 'PKG SIZE', 'TOTAL ORDERED-O', 'TOTAL BILLED-B', 'TOTAL SHORTAGE-S', 'HIGHEST SHORTAGE-S', 'AMOUNT', 'COST'].includes(n) ||
+                (n.includes('TOTAL ORDERED') && n.endsWith('-O')) ||
+                (n.includes('TOTAL BILLED') && n.endsWith('-B')) ||
+                (n.includes('TOTAL SHORTAGE') && n.endsWith('-S') && !n.includes('HIGHEST')) ||
+                (n.includes('HIGHEST SHORTAGE') && n.endsWith('-S'));
+        }
+        function filterToBaseColumnsForCompact(cols) {
+            return cols.filter(c => isBaseColumnForCompact(c));
+        }
+        window.toggleCompactView = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const runId = urlParams.get('run_id');
+            if (!runId || !window.reportDataStore || !window.reportDataStore[runId]) return;
+            const reportData = window.reportDataStore[runId];
+            reportData.compactView = !reportData.compactView;
+            renderSortedTable(runId, reportData);
+        };
         // Function to re-render table with sorted data
         function renderSortedTable(runId, reportData) {
             const dataTablesDiv = document.getElementById('dataTables');
             if (!dataTablesDiv || !reportData) return;
             
             const dataRows = reportData.sorted;
-            const columns = reportData.columns;
+            const allColumns = reportData.allColumns || reportData.columns || [];
+            const compactView = reportData.compactView !== false;
+            const columns = compactView ? filterToBaseColumnsForCompact(allColumns) : allColumns;
             
             // Get current search term
             const searchInput = document.getElementById('medicineSearch');
@@ -569,21 +590,24 @@
             let tablesHTML = `
                 <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full">
                     <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
-                        <div class="flex items-center justify-between mb-4">
-                            <p class="text-sm text-gray-500 dark:text-gray-400">${filteredRows.length} medicines</p>
-                        </div>
-                        <!-- Search Input -->
-                        <div>
-                            <div class="relative">
+                        <div class="flex flex-wrap items-center gap-4 mb-4">
+                            <div class="relative flex-1 min-w-[200px]">
                                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
                                 <input 
                                     type="text" 
                                     id="medicineSearch" 
                                     placeholder="Search by medicine name..." 
+                                    value="${(searchTerm || '').replace(/"/g, '&quot;')}"
                                     class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
                                 />
                             </div>
+                            <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700 dark:text-gray-300">
+                                <input type="checkbox" id="compactViewCheckbox" ${compactView ? 'checked' : ''} onchange="toggleCompactView()" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <span>Compact view</span>
+                                <span class="text-gray-400 dark:text-gray-500 text-xs">(fewer columns)</span>
+                            </label>
                         </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">${filteredRows.length} of ${dataRows.length} medicines</p>
                     </div>
                     <div class="overflow-x-auto overflow-y-auto flex-1 min-h-0" id="tableContainer">
                         <table class="w-full text-left border-collapse" style="min-width: 100%;">
@@ -716,37 +740,12 @@
                 });
             }
             
-            // Re-attach search handler
+            // Re-attach search handler: re-render table so filtered rows stay correct
             const newSearchInput = document.getElementById('medicineSearch');
             if (newSearchInput) {
                 newSearchInput.value = searchTerm;
-                newSearchInput.addEventListener('input', function(e) {
-                    const searchTerm = e.target.value.toLowerCase().trim();
-                    const tableContainer = document.getElementById('tableContainer');
-                    if (tableContainer) {
-                        const rows = tableContainer.querySelectorAll('tbody tr');
-                        let visibleCount = 0;
-                        
-                        rows.forEach(row => {
-                            const drugName = row.getAttribute('data-drug-name') || '';
-                            if (searchTerm === '' || drugName.includes(searchTerm)) {
-                                row.style.display = '';
-                                visibleCount++;
-                            } else {
-                                row.style.display = 'none';
-                            }
-                        });
-                        
-                        // Update count
-                        const countElement = document.querySelector('.text-sm.text-gray-500.dark\\:text-gray-400');
-                        if (countElement) {
-                            if (searchTerm) {
-                                countElement.textContent = `Showing ${visibleCount} of ${dataRows.length} medicines`;
-                            } else {
-                                countElement.textContent = `${dataRows.length} medicines`;
-                            }
-                        }
-                    }
+                newSearchInput.addEventListener('input', function() {
+                    renderSortedTable(runId, reportData);
                 });
             }
         }
@@ -1862,10 +1861,11 @@
                 window.reportDataStore = window.reportDataStore || {};
                 window.reportDataStore[runId] = {
                     original: JSON.parse(JSON.stringify(data.dawairx_report)),
-                    columns: data.dawairx_columns,
+                    allColumns: data.dawairx_columns,
                     sorted: JSON.parse(JSON.stringify(data.dawairx_report)),
                     sortColumn: null,
-                    sortDirection: 'none'
+                    sortDirection: 'none',
+                    compactView: true
                 };
             }
             
@@ -1957,8 +1957,25 @@
                 
                 // Use actual count of rows with ranks, fallback to array length
                 const rowCount = actualRowCount > 0 ? actualRowCount : data.dawairx_report.length;
-                const columns = data.dawairx_columns || Object.keys(data.dawairx_report[0]);
-                console.log('📊 Table columns:', columns.length, 'columns');
+                const allColumns = data.dawairx_columns || Object.keys(data.dawairx_report[0]);
+                function isBaseColumn(col) {
+                    const n = (col || '').replace(/\n/g, ' ').trim();
+                    return ['NDC', 'DRUG NAME', 'RANK', 'PKG SIZE', 'TOTAL ORDERED-O', 'TOTAL BILLED-B', 'TOTAL SHORTAGE-S', 'HIGHEST SHORTAGE-S', 'AMOUNT', 'COST'].includes(n) ||
+                        (n.includes('TOTAL ORDERED') && n.endsWith('-O')) ||
+                        (n.includes('TOTAL BILLED') && n.endsWith('-B')) ||
+                        (n.includes('TOTAL SHORTAGE') && n.endsWith('-S') && !n.includes('HIGHEST')) ||
+                        (n.includes('HIGHEST SHORTAGE') && n.endsWith('-S'));
+                }
+                function filterToBaseColumns(cols) {
+                    return cols.filter(c => isBaseColumn(c));
+                }
+                const compactView = (window.reportDataStore && window.reportDataStore[runId] && window.reportDataStore[runId].compactView !== false);
+                if (window.reportDataStore && window.reportDataStore[runId]) {
+                    window.reportDataStore[runId].allColumns = allColumns;
+                    window.reportDataStore[runId].compactView = compactView;
+                }
+                const columns = compactView ? filterToBaseColumns(allColumns) : allColumns;
+                console.log('📊 Table columns:', columns.length, (compactView ? '(compact)' : '(all)'), 'of', allColumns.length);
                 console.log('📊 Table rows:', data.dawairx_report.length, 'rows');
                 console.log('📊 First row sample:', data.dawairx_report[0]);
                 
@@ -2007,9 +2024,8 @@
                     <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col h-full">
                         <!-- Search Section -->
                         <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
-                            <!-- Search Input -->
-                            <div class="mb-4">
-                                <div class="relative">
+                            <div class="flex flex-wrap items-center gap-4 mb-4">
+                                <div class="relative flex-1 min-w-[200px]">
                                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
                                     <input 
                                         type="text" 
@@ -2018,6 +2034,11 @@
                                         class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
                                     />
                                 </div>
+                                <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700 dark:text-gray-300">
+                                    <input type="checkbox" id="compactViewCheckbox" ${compactView ? 'checked' : ''} onchange="toggleCompactView()" class="rounded border-gray-300 text-primary focus:ring-primary">
+                                    <span>Compact view</span>
+                                    <span class="text-gray-400 dark:text-gray-500 text-xs" title="Show only NDC, Drug, Rank, PKG, Ordered, Billed, Shortage, AMT, COST">(fewer columns)</span>
+                                </label>
                             </div>
                         </div>
                         <div class="overflow-x-auto overflow-y-auto flex-1 min-h-0" id="tableContainer">

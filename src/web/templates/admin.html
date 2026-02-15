@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Admin Panel - DawaiRx</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2387e5",
+                        "background-light": "#f6f5f8",
+                        "background-dark": "#150f23",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e1b2e",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-gray-100 transition-colors duration-200 min-h-screen">
+    <!-- Header -->
+    <header class="w-full border-b border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark px-6 py-4">
+        <div class="mx-auto flex max-w-7xl items-center justify-between">
+            <div class="flex items-center gap-3 text-primary">
+                <div class="flex items-center justify-center size-10 bg-primary/10 rounded-lg">
+                    <span class="material-symbols-outlined text-2xl">admin_panel_settings</span>
+                </div>
+                <h1 class="text-xl lg:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Admin Panel</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Back to Dashboard</a>
+                <button id="logoutBtn" class="px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Registration Requests</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Review and approve/reject user registration requests</p>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="mb-6 flex gap-2">
+            <button id="filterAll" class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium">All</button>
+            <button id="filterPending" class="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-300 dark:hover:bg-slate-600">Pending</button>
+            <button id="filterApproved" class="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium hover:bg-green-200 dark:hover:bg-green-900/50">Approved</button>
+            <button id="filterRejected" class="px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50">Rejected</button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-12">
+            <span class="material-symbols-outlined animate-spin text-4xl text-primary">sync</span>
+            <p class="mt-4 text-slate-500 dark:text-slate-400">Loading requests...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12">
+            <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4">inbox</span>
+            <p class="text-slate-500 dark:text-slate-400">No registration requests found</p>
+        </div>
+
+        <!-- Requests List -->
+        <div id="requestsList" class="hidden space-y-4">
+            <!-- Requests will be inserted here -->
+        </div>
+    </main>
+
+    <!-- Approve/Reject Modal -->
+    <div id="actionModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 id="modalTitle" class="text-xl font-bold text-slate-900 dark:text-white mb-4"></h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Admin Notes (Optional)</label>
+                <textarea id="adminNotes" rows="3" class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none" placeholder="Add notes about this decision"></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button id="confirmActionBtn" class="flex-1 px-4 py-2 rounded-lg text-white font-medium"></button>
+                <button id="cancelActionBtn" class="flex-1 px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilter = 'all';
+        let currentAction = null;
+        let currentUserId = null;
+        const token = localStorage.getItem('auth_token');
+
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Check admin status
+        async function checkAdminStatus() {
+            try {
+                const response = await fetch('/api/admin/is-admin', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                if (!data.is_admin) {
+                    alert('Access denied. Admin privileges required.');
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // Load requests
+        async function loadRequests(filter = 'all') {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('requestsList').classList.add('hidden');
+
+            try {
+                const url = filter === 'all' ? '/api/admin/requests' : `/api/admin/requests?status_filter=${filter}`;
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 403) {
+                    alert('Access denied. Admin privileges required.');
+                    window.location.href = '/';
+                    return;
+                }
+
+                const data = await response.json();
+                const requests = data.requests || [];
+
+                document.getElementById('loadingState').classList.add('hidden');
+
+                if (requests.length === 0) {
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    return;
+                }
+
+                renderRequests(requests);
+            } catch (error) {
+                console.error('Error loading requests:', error);
+                document.getElementById('loadingState').classList.add('hidden');
+                alert('Failed to load requests. Please try again.');
+            }
+        }
+
+        // Render requests
+        function renderRequests(requests) {
+            const container = document.getElementById('requestsList');
+            container.innerHTML = '';
+
+            // Filter requests by current filter (client-side backup filtering)
+            const filteredRequests = requests.filter(req => {
+                if (currentFilter === 'all') return true;
+                return req.status === currentFilter;
+            });
+
+            if (filteredRequests.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                return;
+            }
+
+            filteredRequests.forEach(req => {
+                const card = document.createElement('div');
+                card.className = 'bg-surface-light dark:bg-surface-dark rounded-lg border border-slate-200 dark:border-slate-700 p-6';
+                
+                const statusColors = {
+                    pending: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+                    approved: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+                    rejected: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                };
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">${req.user_id}</h3>
+                            ${req.email ? `<p class="text-sm text-slate-500 dark:text-slate-400">${req.email}</p>` : ''}
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium ${statusColors[req.status]}">${req.status.toUpperCase()}</span>
+                    </div>
+                    ${req.company ? `<p class="text-sm text-slate-600 dark:text-slate-400 mb-2"><span class="font-medium">Company:</span> ${req.company}</p>` : ''}
+                    ${req.reason ? `<p class="text-sm text-slate-600 dark:text-slate-400 mb-2"><span class="font-medium">Reason:</span> ${req.reason}</p>` : ''}
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Requested: ${new Date(req.requested_at).toLocaleString()}</p>
+                    ${req.reviewed_at ? `<p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Reviewed: ${new Date(req.reviewed_at).toLocaleString()} by ${req.reviewed_by || 'Admin'}</p>` : ''}
+                    ${req.admin_notes ? `<p class="text-sm text-slate-600 dark:text-slate-400 mb-4 p-3 bg-slate-50 dark:bg-slate-800 rounded"><span class="font-medium">Admin Notes:</span> ${req.admin_notes}</p>` : ''}
+                    ${req.status === 'pending' ? `
+                        <div class="flex gap-2">
+                            <button onclick="showApproveModal('${req.user_id}')" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">Approve</button>
+                            <button onclick="showRejectModal('${req.user_id}')" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">Reject</button>
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(card);
+            });
+
+            container.classList.remove('hidden');
+        }
+
+        // Show approve modal
+        function showApproveModal(userId) {
+            currentAction = 'approve';
+            currentUserId = userId;
+            document.getElementById('modalTitle').textContent = `Approve Registration Request for ${userId}?`;
+            document.getElementById('confirmActionBtn').textContent = 'Approve';
+            document.getElementById('confirmActionBtn').className = 'flex-1 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors';
+            document.getElementById('adminNotes').value = '';
+            document.getElementById('actionModal').classList.remove('hidden');
+        }
+
+        // Show reject modal
+        function showRejectModal(userId) {
+            currentAction = 'reject';
+            currentUserId = userId;
+            document.getElementById('modalTitle').textContent = `Reject Registration Request for ${userId}?`;
+            document.getElementById('confirmActionBtn').textContent = 'Reject';
+            document.getElementById('confirmActionBtn').className = 'flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors';
+            document.getElementById('adminNotes').value = '';
+            document.getElementById('actionModal').classList.remove('hidden');
+        }
+
+        // Confirm action
+        async function confirmAction() {
+            const adminNotes = document.getElementById('adminNotes').value.trim() || null;
+            const endpoint = currentAction === 'approve' ? 'approve' : 'reject';
+            
+            try {
+                const response = await fetch(`/api/admin/${endpoint}-request/${currentUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ admin_notes: adminNotes })
+                });
+
+                if (response.ok) {
+                    document.getElementById('actionModal').classList.add('hidden');
+                    loadRequests(currentFilter);
+                } else {
+                    const data = await response.json();
+                    alert(data.detail || 'Failed to process request');
+                }
+            } catch (error) {
+                console.error('Error processing action:', error);
+                alert('Failed to process request. Please try again.');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('filterAll').addEventListener('click', () => {
+            currentFilter = 'all';
+            loadRequests('all');
+            updateFilterButtons();
+        });
+
+        document.getElementById('filterPending').addEventListener('click', () => {
+            currentFilter = 'pending';
+            loadRequests('pending');
+            updateFilterButtons();
+        });
+
+        document.getElementById('filterApproved').addEventListener('click', () => {
+            currentFilter = 'approved';
+            loadRequests('approved');
+            updateFilterButtons();
+        });
+
+        document.getElementById('filterRejected').addEventListener('click', () => {
+            currentFilter = 'rejected';
+            loadRequests('rejected');
+            updateFilterButtons();
+        });
+
+        function updateFilterButtons() {
+            document.querySelectorAll('[id^="filter"]').forEach(btn => {
+                btn.className = 'px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-300 dark:hover:bg-slate-600';
+            });
+            
+            const activeBtn = document.getElementById(`filter${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)}`);
+            if (activeBtn) {
+                if (currentFilter === 'all') {
+                    activeBtn.className = 'px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium';
+                } else if (currentFilter === 'pending') {
+                    activeBtn.className = 'px-4 py-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-sm font-medium';
+                } else if (currentFilter === 'approved') {
+                    activeBtn.className = 'px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium';
+                } else if (currentFilter === 'rejected') {
+                    activeBtn.className = 'px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm font-medium';
+                }
+            }
+        }
+
+        document.getElementById('confirmActionBtn').addEventListener('click', confirmAction);
+        document.getElementById('cancelActionBtn').addEventListener('click', () => {
+            document.getElementById('actionModal').classList.add('hidden');
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/login';
+        });
+
+        // Make functions global for onclick handlers
+        window.showApproveModal = showApproveModal;
+        window.showRejectModal = showRejectModal;
+
+        // Initialize
+        checkAdminStatus().then(() => {
+            loadRequests('all');
+            updateFilterButtons();
+        });
+    </script>
+</body>
+</html>

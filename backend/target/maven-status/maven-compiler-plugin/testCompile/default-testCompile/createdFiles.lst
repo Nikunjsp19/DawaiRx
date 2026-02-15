@@ -1,0 +1,5 @@
+com/dawai/normalization/MedicineKeyGeneratorTest.class
+com/dawai/reconciliation/ReconciliationServiceTest.class
+com/dawai/reporting/DawairxReportBuilderTest.class
+com/dawai/normalization/NdcNormalizerTest.class
+com/dawai/normalization/NormalizationServiceTest.class

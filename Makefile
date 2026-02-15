@@ -1,14 +1,17 @@
-.PHONY: help install lint test run clean mongo-test web
+.PHONY: help install lint test run clean mongo-test web add-admin run-frontend run-backend
 
 help:
 	@echo "Available commands:"
-	@echo "  make install      - Install dependencies"
-	@echo "  make lint         - Run linters (black, flake8)"
-	@echo "  make test         - Run tests"
-	@echo "  make run          - Run the CLI (placeholder)"
-	@echo "  make mongo-test   - Test MongoDB connection"
-	@echo "  make web          - Start the web UI"
-	@echo "  make clean        - Clean temporary files"
+	@echo "  make install        - Install Python dependencies"
+	@echo "  make lint           - Run linters (black, flake8)"
+	@echo "  make test           - Run tests"
+	@echo "  make run            - Run the CLI (placeholder)"
+	@echo "  make mongo-test     - Test MongoDB connection"
+	@echo "  make web            - Start the Python web UI"
+	@echo "  make add-admin      - Add Admin@DawaiRx.us to MongoDB admins collection"
+	@echo "  make run-frontend   - Start React frontend (Vite, port 5173)"
+	@echo "  make run-backend    - Start Spring Boot backend (port 8080)"
+	@echo "  make clean          - Clean temporary files"
 
 install:
 	pip install -r requirements.txt
@@ -28,10 +31,23 @@ run:
 	@echo "CLI not yet implemented. Use: python -m src.cli.main --help"
 
 web:
-	python -m src.cli.main web
+	python3 -m src.cli.main web
 
 mongo-test:
 	python -m src.persistence.mongo_test
+
+add-admin:
+	python scripts/add_admin.py
+
+# React + Spring Boot app: run in two terminals:
+#   Terminal 1: make run-backend
+#   Terminal 2: make run-frontend
+# Then open http://localhost:5173
+run-frontend:
+	cd frontend && npm install && npm run dev
+
+run-backend:
+	cd backend && mvn spring-boot:run
 
 clean:
 	find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null || true

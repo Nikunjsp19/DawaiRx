@@ -7,6 +7,7 @@ import logging
 
 from src.auth.utils import decode_access_token
 from src.auth.user_store import UserStore
+from src.auth.admin_store import AdminStore
 
 logger = logging.getLogger(__name__)
 
@@ -35,4 +36,19 @@ def get_current_user_id(
 def get_user_store() -> UserStore:
     """Dependency to get user store instance"""
     return UserStore()
+
+
+def is_admin(user_id: str) -> bool:
+    """Check if a user is an admin (stored in MongoDB admins collection)"""
+    return AdminStore().is_admin(user_id)
+
+
+def require_admin(user_id: str = Depends(get_current_user_id)) -> str:
+    """Dependency to require admin access"""
+    if not is_admin(user_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return user_id
 

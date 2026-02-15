@@ -1,6 +1,6 @@
 """User store for MongoDB user management"""
 
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.errors import PyMongoError, DuplicateKeyError
@@ -25,15 +25,28 @@ class UserStore:
             mongo_uri: MongoDB connection URI (ignored - uses pool)
             db_name: Database name (ignored - uses pool)
         """
-        # Use connection pool instead of creating new connections
-        self.db = get_database()
-        self.users_collection: Collection = self.db["users"]
-        
-        # Create unique index on user_id (idempotent)
-        try:
-            self.users_collection.create_index("user_id", unique=True)
-        except Exception as e:
-            logger.debug(f"Index may already exist: {e}")
+        # Don't connect immediately - lazy initialization
+        self._db = None
+        self._users_collection = None
+    
+    @property
+    def db(self):
+        """Lazy database access - only connects when needed"""
+        if self._db is None:
+            self._db = get_database()
+        return self._db
+    
+    @property
+    def users_collection(self) -> Collection:
+        """Lazy collection access - only connects when needed"""
+        if self._users_collection is None:
+            self._users_collection = self.db["users"]
+            # Create unique index on user_id (idempotent) - only when first accessed
+            try:
+                self._users_collection.create_index("user_id", unique=True)
+            except Exception as e:
+                logger.debug(f"Index may already exist: {e}")
+        return self._users_collection
     
     def close(self):
         """Close MongoDB connection (no-op with connection pool)"""
@@ -72,6 +85,18 @@ class UserStore:
             logger.error(f"Error creating user: {e}")
             raise
     
+    def list_all_users(self) -> List[Dict[str, Any]]:
+        """List all users (admin only). Returns list of { user_id, email, disabled } (no password)."""
+        try:
+            cursor = self.users_collection.find({}, {"user_id": 1, "email": 1, "disabled": 1, "_id": 0})
+            return [
+                {"user_id": doc.get("user_id") or "", "email": doc.get("email") or "", "disabled": doc.get("disabled", False)}
+                for doc in cursor
+            ]
+        except Exception as e:
+            logger.error(f"Error listing users: {e}")
+            return []
+
     def get_user_by_id(self, user_id: str) -> Optional[UserDocument]:
         """Get user by user_id"""
         try:
@@ -84,11 +109,12 @@ class UserStore:
             return None
     
     def authenticate_user(self, user_id: str, password: str) -> Optional[UserDocument]:
-        """Authenticate a user by user_id and password"""
+        """Authenticate a user by user_id and password. Disabled users cannot log in."""
         user = self.get_user_by_id(user_id)
         if not user:
             return None
-        
+        if getattr(user, "disabled", False):
+            return None
         if verify_password(password, user.password_hash):
             return user
         return None
@@ -120,5 +146,19 @@ class UserStore:
             return None
         except Exception as e:
             logger.error(f"Error updating user: {e}")
+            return None
+
+    def set_user_disabled(self, user_id: str, disabled: bool) -> bool:
+        """Set user disabled state (admin only). Returns True if updated."""
+        try:
+            from datetime import datetime
+            result = self.users_collection.update_one(
+                {"user_id": user_id},
+                {"$set": {"disabled": disabled, "updated_at": datetime.utcnow()}}
+            )
+            return result.modified_count > 0 or result.matched_count > 0
+        except Exception as e:
+            logger.error(f"Error setting user disabled: {e}")
+            return False
             raise
 

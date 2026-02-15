@@ -50,7 +50,7 @@
     <main class="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 lg:py-6 flex flex-col items-center justify-center">
         <div class="w-full max-w-sm">
             <!-- Login Card -->
-            <div class="bg-surface-light dark:bg-surface-dark rounded-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
+            <div id="loginCard" class="bg-surface-light dark:bg-surface-dark rounded-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
                 <div class="p-6">
                     <div class="text-center mb-6">
                         <div class="inline-flex items-center justify-center size-12 rounded-full bg-primary/10 text-primary mb-3">
@@ -66,6 +66,16 @@
 
                     <div id="successMessage" class="hidden mb-5 p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/30">
                         <p class="text-sm text-green-800 dark:text-green-300"></p>
+                    </div>
+
+                    <!-- Already Logged In Message -->
+                    <div id="alreadyLoggedInMessage" class="hidden mb-5 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/30">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-blue-800 dark:text-blue-300">You are already logged in. <a href="/" class="font-semibold underline">Go to Dashboard</a> or continue below to register a new account.</p>
+                            <button onclick="document.getElementById('alreadyLoggedInMessage').classList.add('hidden')" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200">
+                                <span class="material-symbols-outlined text-lg">close</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Login Form -->
@@ -97,25 +107,98 @@
                         </button>
                     </form>
 
-                    <!-- Register Link -->
+                    <!-- Request Access Link -->
                     <div class="mt-6 text-center">
                         <p class="text-sm text-slate-500 dark:text-slate-400">
                             Don't have an account?
-                            <a href="#" id="registerLink" class="text-primary hover:text-primary/80 font-semibold underline decoration-slate-300 dark:decoration-slate-600 underline-offset-4 transition-colors">Register</a>
+                            <a href="#" id="requestAccessLink" class="text-primary hover:text-primary/80 font-semibold underline decoration-slate-300 dark:decoration-slate-600 underline-offset-4 transition-colors">Request Access</a>
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Register Form (Hidden by default) -->
-            <div id="registerCard" class="hidden mt-6 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <!-- Request Access Form (Hidden by default) -->
+            <div id="requestAccessCard" class="hidden mt-6 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="p-8">
                     <div class="text-center mb-8">
                         <div class="inline-flex items-center justify-center size-16 rounded-full bg-primary/10 text-primary mb-4">
                             <span class="material-symbols-outlined text-4xl">person_add</span>
                         </div>
+                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Request Access</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Submit a registration request for admin approval</p>
+                    </div>
+
+                    <div id="requestErrorMessage" class="hidden mb-5 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30">
+                        <p class="text-sm text-red-800 dark:text-red-300"></p>
+                    </div>
+
+                    <div id="requestSuccessMessage" class="hidden mb-5 p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/30">
+                        <p class="text-sm text-green-800 dark:text-green-300"></p>
+                    </div>
+
+                    <form id="requestAccessForm" class="space-y-4">
+                        <div>
+                            <label for="reqUserId" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Desired User ID</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
+                                <input type="text" id="reqUserId" name="userId" required minlength="3" maxlength="50"
+                                    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                    placeholder="Choose a user ID">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="reqEmail" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email (Optional)</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">email</span>
+                                <input type="email" id="reqEmail" name="email"
+                                    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                    placeholder="Enter your email">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="reqCompany" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Company/Organization (Optional)</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">business</span>
+                                <input type="text" id="reqCompany" name="company" maxlength="100"
+                                    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                    placeholder="Enter company name">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="reqReason" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Reason for Access (Optional)</label>
+                            <textarea id="reqReason" name="reason" rows="3" maxlength="500"
+                                class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
+                                placeholder="Tell us why you need access to DawaiRx"></textarea>
+                        </div>
+
+                        <button type="submit" id="requestAccessButton"
+                            class="w-full flex items-center justify-center gap-2 h-12 px-6 bg-primary hover:bg-primary/90 text-white text-base font-bold rounded-lg shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                            <span class="material-symbols-outlined">send</span>
+                            <span>Submit Request</span>
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-slate-500 dark:text-slate-400">
+                            Already have an account?
+                            <a href="#" id="backToLoginLink" class="text-primary hover:text-primary/80 font-semibold underline decoration-slate-300 dark:decoration-slate-600 underline-offset-4 transition-colors">Sign In</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Register Form (Hidden by default, shown after approval) -->
+            <div id="registerCard" class="hidden mt-6 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="p-8">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center size-16 rounded-full bg-green-500/10 text-green-500 mb-4">
+                            <span class="material-symbols-outlined text-4xl">check_circle</span>
+                        </div>
                         <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Create Account</h2>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Register for a new account</p>
+                        <p class="text-sm text-green-600 dark:text-green-400">Your request has been approved! Complete your registration.</p>
                     </div>
 
                     <form id="registerForm" class="space-y-4">
@@ -123,9 +206,9 @@
                             <label for="regUserId" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">User ID</label>
                             <div class="relative">
                                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
-                                <input type="text" id="regUserId" name="userId" required
-                                    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                    placeholder="Choose a user ID">
+                                <input type="text" id="regUserId" name="userId" required readonly
+                                    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white cursor-not-allowed"
+                                    placeholder="Your approved user ID">
                             </div>
                         </div>
 
@@ -152,14 +235,14 @@
                         <button type="submit" id="registerButton"
                             class="w-full flex items-center justify-center gap-2 h-12 px-6 bg-primary hover:bg-primary/90 text-white text-base font-bold rounded-lg shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]">
                             <span class="material-symbols-outlined">person_add</span>
-                            <span>Register</span>
+                            <span>Complete Registration</span>
                         </button>
                     </form>
 
                     <div class="mt-6 text-center">
                         <p class="text-sm text-slate-500 dark:text-slate-400">
                             Already have an account?
-                            <a href="#" id="backToLoginLink" class="text-primary hover:text-primary/80 font-semibold underline decoration-slate-300 dark:decoration-slate-600 underline-offset-4 transition-colors">Sign In</a>
+                            <a href="#" id="backToLoginFromRegLink" class="text-primary hover:text-primary/80 font-semibold underline decoration-slate-300 dark:decoration-slate-600 underline-offset-4 transition-colors">Sign In</a>
                         </p>
                     </div>
                 </div>
@@ -175,25 +258,57 @@
     </footer>
 
     <script>
-        // Toggle between login and register forms
-        const loginCard = document.querySelector('.bg-surface-light');
-        const registerCard = document.getElementById('registerCard');
-        const registerLink = document.getElementById('registerLink');
-        const backToLoginLink = document.getElementById('backToLoginLink');
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle between login, request access, and register forms
+            const loginCard = document.getElementById('loginCard');
+            const requestAccessCard = document.getElementById('requestAccessCard');
+            const registerCard = document.getElementById('registerCard');
+            const requestAccessLink = document.getElementById('requestAccessLink');
+            const backToLoginLink = document.getElementById('backToLoginLink');
+            const backToLoginFromRegLink = document.getElementById('backToLoginFromRegLink');
 
-        registerLink?.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginCard.closest('div').classList.add('hidden');
-            registerCard.classList.remove('hidden');
-        });
+            if (!requestAccessLink) {
+                console.error('Request Access link not found!');
+            }
+            if (!loginCard) {
+                console.error('Login card not found!');
+            }
+            if (!requestAccessCard) {
+                console.error('Request Access card not found!');
+            }
 
-        backToLoginLink?.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerCard.classList.add('hidden');
-            loginCard.closest('div').classList.remove('hidden');
-        });
+            requestAccessLink?.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Request Access link clicked');
+                if (loginCard) {
+                    loginCard.classList.add('hidden');
+                    console.log('Login card hidden');
+                } else {
+                    console.error('Login card not found');
+                }
+                if (requestAccessCard) {
+                    requestAccessCard.classList.remove('hidden');
+                    console.log('Request access card shown');
+                } else {
+                    console.error('Request access card not found');
+                }
+            });
 
-        // Login form handler
+            backToLoginLink?.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (requestAccessCard) requestAccessCard.classList.add('hidden');
+                if (registerCard) registerCard.classList.add('hidden');
+                if (loginCard) loginCard.classList.remove('hidden');
+            });
+
+            backToLoginFromRegLink?.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (registerCard) registerCard.classList.add('hidden');
+                if (loginCard) loginCard.classList.remove('hidden');
+            });
+
+            // Login form handler
         const loginForm = document.getElementById('loginForm');
         const loginButton = document.getElementById('loginButton');
         const errorMessage = document.getElementById('errorMessage');
@@ -236,6 +351,121 @@
                 loginButton.innerHTML = '<span class="material-symbols-outlined">login</span><span>Sign In</span>';
             }
         });
+
+            // Request access form handler
+            const requestAccessForm = document.getElementById('requestAccessForm');
+            const requestAccessButton = document.getElementById('requestAccessButton');
+
+            if (!requestAccessForm) {
+                console.error('Request access form not found!');
+            }
+            if (!requestAccessButton) {
+                console.error('Request access button not found!');
+            }
+
+            requestAccessForm?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log('Request access form submitted');
+                
+                const userId = document.getElementById('reqUserId')?.value;
+                const email = document.getElementById('reqEmail')?.value;
+                const company = document.getElementById('reqCompany')?.value;
+                const reason = document.getElementById('reqReason')?.value;
+
+                console.log('Form data:', { userId, email, company, reason });
+
+                if (!userId || userId.trim().length < 3) {
+                    alert('Please enter a valid User ID (minimum 3 characters)');
+                    return;
+                }
+
+                // Use request-specific messages if available, fallback to login messages
+                const errorMsg = document.getElementById('requestErrorMessage') || document.getElementById('errorMessage');
+                const successMsg = document.getElementById('requestSuccessMessage') || document.getElementById('successMessage');
+
+                if (errorMsg) errorMsg.classList.add('hidden');
+                if (successMsg) successMsg.classList.add('hidden');
+                
+                if (requestAccessButton) {
+                    requestAccessButton.disabled = true;
+                    requestAccessButton.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span><span>Submitting...</span>';
+                }
+
+                try {
+                    console.log('Sending request to /api/auth/request-access');
+                    const response = await fetch('/api/auth/request-access', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            user_id: userId.trim(), 
+                            email: email?.trim() || undefined,
+                            company: company?.trim() || undefined,
+                            reason: reason?.trim() || undefined
+                        }),
+                    });
+
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
+                    let data;
+                    try {
+                        data = await response.json();
+                        console.log('Response data:', data);
+                    } catch (jsonError) {
+                        console.error('Failed to parse JSON response:', jsonError);
+                        const text = await response.text();
+                        console.error('Response text:', text);
+                        throw new Error(`Server returned ${response.status}: ${text || response.statusText}`);
+                    }
+
+                    if (response.ok) {
+                        if (successMsg) {
+                            successMsg.querySelector('p').textContent = 'Registration request submitted successfully! Admin will review your request. You will be able to register once approved.';
+                            successMsg.classList.remove('hidden');
+                        } else {
+                            alert('Registration request submitted successfully! Admin will review your request.');
+                        }
+                        if (requestAccessForm) requestAccessForm.reset();
+                        setTimeout(() => {
+                            if (requestAccessCard) requestAccessCard.classList.add('hidden');
+                            if (loginCard) loginCard.classList.remove('hidden');
+                        }, 3000);
+                    } else {
+                        // Handle different error status codes
+                        let errorText;
+                        if (response.status === 404) {
+                            errorText = 'API endpoint not found. Please restart the server or contact support.';
+                        } else if (response.status === 500) {
+                            errorText = data.detail || 'Server error. Please try again later.';
+                        } else {
+                            errorText = data.detail || (Array.isArray(data.detail) ? data.detail.map(d => d.msg || d).join(', ') : `Request failed (${response.status})`);
+                        }
+                        console.error('Request failed:', response.status, errorText);
+                        if (errorMsg) {
+                            errorMsg.querySelector('p').textContent = errorText;
+                            errorMsg.classList.remove('hidden');
+                        } else {
+                            alert('Error: ' + errorText);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Request error:', error);
+                    const errorText = 'Network error. Please try again. ' + (error.message || '');
+                    if (errorMsg) {
+                        errorMsg.querySelector('p').textContent = errorText;
+                        errorMsg.classList.remove('hidden');
+                    } else {
+                        alert('Error: ' + errorText);
+                    }
+                } finally {
+                    if (requestAccessButton) {
+                        requestAccessButton.disabled = false;
+                        requestAccessButton.innerHTML = '<span class="material-symbols-outlined">send</span><span>Submit Request</span>';
+                    }
+                }
+            });
 
         // Register form handler
         const registerForm = document.getElementById('registerForm');
@@ -284,14 +514,53 @@
                 errorMessage.classList.remove('hidden');
             } finally {
                 registerButton.disabled = false;
-                registerButton.innerHTML = '<span class="material-symbols-outlined">person_add</span><span>Register</span>';
+                registerButton.innerHTML = '<span class="material-symbols-outlined">person_add</span><span>Complete Registration</span>';
             }
         });
 
-        // Check if already logged in
-        if (localStorage.getItem('auth_token')) {
-            window.location.href = '/';
-        }
+        // Check approval status when user_id is entered in request form
+        const reqUserIdInput = document.getElementById('reqUserId');
+        reqUserIdInput?.addEventListener('blur', async function() {
+            const userId = this.value.trim();
+            if (userId.length >= 3) {
+                try {
+                    const response = await fetch(`/api/auth/check-approval/${encodeURIComponent(userId)}`);
+                    const data = await response.json();
+                    
+                    if (data.approved) {
+                        // Show register form instead
+                        if (requestAccessCard) requestAccessCard.classList.add('hidden');
+                        if (loginCard) loginCard.classList.add('hidden');
+                        const regUserIdInput = document.getElementById('regUserId');
+                        if (regUserIdInput) regUserIdInput.value = userId;
+                        if (registerCard) registerCard.classList.remove('hidden');
+                    } else if (data.status === 'pending') {
+                        if (errorMessage) {
+                            errorMessage.querySelector('p').textContent = data.message;
+                            errorMessage.classList.remove('hidden');
+                        }
+                    } else if (data.status === 'rejected') {
+                        if (errorMessage) {
+                            errorMessage.querySelector('p').textContent = data.message;
+                            errorMessage.classList.remove('hidden');
+                        }
+                    }
+                } catch (error) {
+                    // Ignore errors, user can still submit request
+                }
+            }
+        });
+
+            // Check if already logged in - show message but don't redirect
+            // This allows users to register/request access even if logged in
+            const authToken = localStorage.getItem('auth_token');
+            if (authToken) {
+                const alreadyLoggedInMsg = document.getElementById('alreadyLoggedInMessage');
+                if (alreadyLoggedInMsg) {
+                    alreadyLoggedInMsg.classList.remove('hidden');
+                }
+            }
+        }); // End of DOMContentLoaded
     </script>
 </body>
 </html>

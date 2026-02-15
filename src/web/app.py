@@ -240,10 +240,14 @@ async def update_settings(
 async def login(login_data: UserLogin):
     """Login endpoint (optimized with connection pool)"""
     try:
-        # Reuse connection pool - no need to close
         user_store = UserStore()
+        existing = user_store.get_user_by_id(login_data.user_id)
+        if existing and getattr(existing, "disabled", False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This account has been disabled. Contact an administrator."
+            )
         user = user_store.authenticate_user(login_data.user_id, login_data.password)
-        
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -376,22 +380,24 @@ async def register(user_data: UserCreate):
 @app.get("/api/admin/requests")
 async def get_registration_requests(
     status_filter: Optional[str] = None,
+    page: int = 1,
+    limit: int = 10,
     admin_user_id: str = Depends(require_admin)
 ):
-    """Get all registration requests (admin only)"""
+    """Get registration requests (admin only) with pagination. Returns { requests, total }."""
     try:
         request_store = RegistrationRequestStore()
-        
-        # Filter by status if provided
+        page = max(1, page)
+        limit = max(1, min(100, limit))
+        skip = (page - 1) * limit
+
         if status_filter and status_filter in ["pending", "approved", "rejected"]:
-            requests = request_store.get_requests_by_status(status_filter)
-        elif status_filter == "pending":
-            # Keep backward compatibility
-            requests = request_store.get_pending_requests()
+            requests = request_store.get_requests_by_status(status_filter, limit=limit, skip=skip)
+            total = request_store.count_requests_by_status(status_filter)
         else:
-            # Get all requests
-            requests = request_store.get_all_requests()
-        
+            requests = request_store.get_all_requests(limit=limit, skip=skip)
+            total = request_store.count_all_requests()
+
         return {
             "requests": [
                 {
@@ -407,7 +413,8 @@ async def get_registration_requests(
                     "admin_notes": req.admin_notes
                 }
                 for req in requests
-            ]
+            ],
+            "total": total
         }
     except Exception as e:
         logger.error(f"Get requests error: {e}")
@@ -483,6 +490,84 @@ async def reject_request(
 async def check_admin_status(user_id: str = Depends(get_current_user_id)):
     """Check if current user is admin"""
     return {"is_admin": is_admin(user_id)}
+
+
+@app.get("/api/admin/report-stats")
+async def get_admin_report_stats(
+    days: int = 30,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    q: Optional[str] = None,
+    admin_user_id: str = Depends(require_admin),
+):
+    """Get report generation count per user, optionally filtered by date range and customer search (admin only)."""
+    from datetime import timedelta, date
+    store = get_run_store()
+    from_dt = None
+    to_dt = None
+    if from_date and from_date.strip() and to_date and to_date.strip():
+        try:
+            from_dt = datetime.combine(date.fromisoformat(from_date.strip()), datetime.min.time()).replace(tzinfo=None)
+            to_dt = datetime.combine(date.fromisoformat(to_date.strip()), datetime.max.time()).replace(tzinfo=None)
+        except ValueError:
+            pass
+    from src.auth.admin_store import AdminStore
+    admin_ids = AdminStore().list_admin_user_ids()
+    def exclude_admins(stats_list):
+        return [s for s in stats_list if s.get("user_id") not in admin_ids]
+    if from_dt is None or to_dt is None:
+        if days < 1:
+            days = 1
+        if days > 365:
+            days = 365
+        since = datetime.utcnow() - timedelta(days=days)
+        stats = exclude_admins(store.get_report_counts_by_user(since=since, user_query=q))
+        return {"stats": stats, "days": days}
+    stats = exclude_admins(store.get_report_counts_by_user(from_date=from_dt, to_date=to_dt, user_query=q))
+    return {"stats": stats, "days": None, "from_date": from_dt.isoformat(), "to_date": to_dt.isoformat()}
+
+
+@app.get("/api/admin/users")
+async def get_admin_users(admin_user_id: str = Depends(require_admin)):
+    """List all users (admin only). Returns { users: [{ user_id, email, disabled }] }. Excludes admin users."""
+    from src.auth.admin_store import AdminStore
+    user_store = UserStore()
+    admin_store = AdminStore()
+    admin_ids = admin_store.list_admin_user_ids()
+    users = [u for u in user_store.list_all_users() if u.get("user_id") not in admin_ids]
+    return {"users": users}
+
+
+@app.post("/api/admin/users/{target_user_id}/disable")
+async def disable_user(
+    target_user_id: str,
+    admin_user_id: str = Depends(require_admin),
+):
+    """Disable a user (admin only). Cannot disable self."""
+    if target_user_id == admin_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot disable your own account",
+        )
+    user_store = UserStore()
+    if not user_store.get_user_by_id(target_user_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    user_store.set_user_disabled(target_user_id, True)
+    return {"message": "User disabled"}
+
+
+@app.post("/api/admin/users/{target_user_id}/enable")
+async def enable_user(
+    target_user_id: str,
+    admin_user_id: str = Depends(require_admin),
+):
+    """Enable a user (admin only)."""
+    user_store = UserStore()
+    if not user_store.get_user_by_id(target_user_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    user_store.set_user_disabled(target_user_id, False)
+    return {"message": "User enabled"}
+
 
 @app.post("/api/upload")
 async def upload_files(

@@ -1,0 +1,33 @@
+logging:
+  level:
+    org.springframework.boot.autoconfigure: WARN
+
+spring:
+  application:
+    name: dawai-rx
+  main:
+    lazy-initialization: false
+  data:
+    mongodb:
+      # Must match Python app. Python default uses Atlas:
+      uri: mongodb+srv://user:user@temp.tzhzodo.mongodb.net/DawaiRx?retryWrites=true&w=majority
+      database: DawaiRx
+
+server:
+  port: 8080
+
+# File storage
+# output-dir: when running from backend/, ${user.dir}/../out/web_runs = project out/web_runs (same as Python).
+app:
+  upload-dir: /tmp/dawai-rx/uploads
+  output-dir: ${user.dir}/../out/web_runs
+  fallback-output-dir: out/web_runs
+
+# JWT - secret must be at least 256 bits (32 chars) for HS256
+jwt:
+  secret: dawai-rx-jwt-secret-key-at-least-32-chars-long-for-hs256
+  expiration-hours: 168  # 7 days
+
+# CORS - allow React frontend
+cors:
+  allowed-origins: http://localhost:5173,http://localhost:3000

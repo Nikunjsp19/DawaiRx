@@ -57,6 +57,10 @@
                 <span class="material-symbols-outlined text-lg">settings</span>
                 <span>Settings</span>
             </a>
+            <a id="adminLink" href="/admin" class="hidden flex items-center gap-3 px-3 py-2.5 rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary transition-colors text-sm">
+                <span class="material-symbols-outlined text-lg">admin_panel_settings</span>
+                <span>Admin Panel</span>
+            </a>
         </nav>
 
         <!-- Logout Button -->
@@ -123,7 +127,7 @@
                         loop 
                         autoplay>
                     </lottie-player>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mt-2">Loading reports...</p>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mt-2">Loading reports....</p>
                     <p class="text-gray-400 dark:text-gray-500 text-xs mt-1">Analyzing inventory data</p>
                 </div>
             </div>
@@ -604,8 +608,26 @@
             }
         }
         
+        // Check admin status and show admin link
+        async function checkAdminAndShowLink() {
+            try {
+                const response = await fetch('/api/admin/is-admin', {
+                    headers: getAuthHeaders()
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.is_admin) {
+                        document.getElementById('adminLink').classList.remove('hidden');
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+            }
+        }
+
         // Load runs on page load
         loadRuns();
+        checkAdminAndShowLink();
 
         // Sidebar toggle for mobile
         function toggleSidebar() {

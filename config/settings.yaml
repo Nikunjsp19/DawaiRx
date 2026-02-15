@@ -1,0 +1,5 @@
+# DawaiRx Application Settings
+# Edit this file to change configuration without modifying code
+
+# Admin users are stored in MongoDB - add directly in the admins collection:
+#   db.admins.insertOne({ "user_id": "your-admin@email.com" })

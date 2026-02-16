@@ -1,45 +1,40 @@
-.PHONY: help install lint test run clean mongo-test web
+.PHONY: help install-frontend run run-frontend run-backend build build-backend build-frontend test-backend clean
 
 help:
-	@echo "Available commands:"
-	@echo "  make install      - Install dependencies"
-	@echo "  make lint         - Run linters (black, flake8)"
-	@echo "  make test         - Run tests"
-	@echo "  make run          - Run the CLI (placeholder)"
-	@echo "  make mongo-test   - Test MongoDB connection"
-	@echo "  make web          - Start the web UI"
-	@echo "  make clean        - Clean temporary files"
+	@echo "DawaiRx - Java + React"
+	@echo ""
+	@echo "  make install-frontend  - Install frontend dependencies (npm ci)"
+	@echo "  make run-frontend      - Start React dev server (port 5173)"
+	@echo "  make run-backend        - Start Spring Boot backend (port 8080)"
+	@echo "  make run               - Run backend (use 'make run-frontend' in another terminal for full app)"
+	@echo "  make build             - Build backend and frontend for production"
+	@echo "  make build-backend     - Package backend (Maven)"
+	@echo "  make build-frontend    - Build frontend (Vite)"
+	@echo "  make test-backend      - Run backend tests"
+	@echo "  make clean             - Remove build artifacts"
 
-install:
-	pip install -r requirements.txt
-	pip install -e .
+install-frontend:
+	cd frontend && npm ci
 
-lint:
-	black --check src/ tests/
-	flake8 src/ tests/ --max-line-length=100 --ignore=E203,W503
+run: run-backend
 
-format:
-	black src/ tests/
+run-frontend:
+	cd frontend && npm run dev
 
-test:
-	pytest tests/ -v --cov=src --cov-report=term-missing
+run-backend:
+	cd backend && mvn spring-boot:run
 
-run:
-	@echo "CLI not yet implemented. Use: python -m src.cli.main --help"
+build: build-backend build-frontend
 
-web:
-	python -m src.cli.main web
+build-backend:
+	cd backend && mvn -q -DskipTests package
 
-mongo-test:
-	python -m src.persistence.mongo_test
+build-frontend:
+	cd frontend && npm run build
+
+test-backend:
+	cd backend && mvn test
 
 clean:
-	find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete
-	find . -type f -name "*.pyo" -delete
-	rm -rf .pytest_cache/
-	rm -rf .coverage
-	rm -rf htmlcov/
-	rm -rf dist/
-	rm -rf build/
-	rm -rf *.egg-info
+	cd backend && mvn -q clean 2>/dev/null || true
+	rm -rf frontend/dist

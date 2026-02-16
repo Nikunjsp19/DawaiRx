@@ -1,0 +1,121 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ──────────────────────────────────────────────────────────
+   Design Tokens — single source of truth
+   ────────────────────────────────────────────────────────── */
+@theme {
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-muted: #dbeafe;
+
+  /* Neutral grays (no blue tint) */
+  --color-gray-50:  #fafafa;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #e5e5e5;
+  --color-gray-300: #d4d4d4;
+  --color-gray-400: #a3a3a3;
+  --color-gray-500: #737373;
+  --color-gray-600: #525252;
+  --color-gray-700: #404040;
+  --color-gray-800: #262626;
+  --color-gray-900: #171717;
+  --color-gray-950: #0a0a0a;
+
+  --color-slate-50:  #fafafa;
+  --color-slate-100: #f5f5f5;
+  --color-slate-200: #e5e5e5;
+  --color-slate-300: #d4d4d4;
+  --color-slate-400: #a3a3a3;
+  --color-slate-500: #737373;
+  --color-slate-600: #525252;
+  --color-slate-700: #404040;
+  --color-slate-800: #262626;
+  --color-slate-900: #171717;
+  --color-slate-950: #0a0a0a;
+
+  --font-display: "Inter", system-ui, sans-serif;
+}
+
+/* ── Semantic variables (light) ─────────────────────────── */
+:root {
+  --color-bg:         #f5f5f5;
+  --color-surface:    #ffffff;
+  --color-text:       #171717;
+  --color-text-secondary: #525252;
+  --color-text-muted: #a3a3a3;
+  --color-border:     #e5e5e5;
+  --color-border-subtle: #f5f5f5;
+  --color-ring:       #2563eb;
+  --radius-sm:  6px;
+  --radius-md:  8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-sm:  0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:  0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
+  --shadow-lg:  0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.05);
+  --shadow-xl:  0 20px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.06);
+}
+
+/* ── Semantic variables (dark) ──────────────────────────── */
+.dark {
+  --color-bg:         #0a0a0a;
+  --color-surface:    #171717;
+  --color-text:       #e5e5e5;
+  --color-text-secondary: #a3a3a3;
+  --color-text-muted: #525252;
+  --color-border:     #262626;
+  --color-border-subtle: #1a1a1a;
+  --shadow-sm:  0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:  0 4px 6px -1px rgba(0,0,0,.4);
+  --shadow-lg:  0 10px 15px -3px rgba(0,0,0,.5);
+  --shadow-xl:  0 20px 25px -5px rgba(0,0,0,.5);
+}
+
+/* ── Base ────────────────────────────────────────────────── */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── Focus ring (visible only for keyboard) ──────────────── */
+*:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-ring);
+  border-color: var(--color-ring);
+}
+
+/* ── Scrollbar (report table) ────────────────────────────── */
+.report-table-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+.report-table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.report-table-scroll::-webkit-scrollbar-track { background: transparent; }
+.report-table-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 3px;
+}
+.report-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+.report-table-scroll::-webkit-scrollbar-corner { background: transparent; }
+
+/* ── Transition utility ──────────────────────────────────── */
+.transition-default {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}

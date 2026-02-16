@@ -1,203 +1,115 @@
-# DawaiRx - Pharmacy Audit & Reconciliation Tool
+# DawaiRx – Pharmacy Audit & Reconciliation
 
-A local-only pharmacy audit/reconciliation application for comparing ordered and sold medication reports. Built with Python 3.11+ and MongoDB.
+A pharmacy audit and reconciliation application for comparing ordered and sold medication reports. Built with **Spring Boot** (Java 17) and **React** (Vite).
 
 ## Features
 
-- **Ingest** pharmacy reports (CSV/XLSX)
+- **Ingest** pharmacy reports (CSV, XLSX)
 - **Normalize** data (NDC codes, drug names, quantities)
 - **Reconcile** inventory (ordered vs sold)
 - **Flag** audit issues with rule-based detection
-- **Generate** reports (CSV exports + Excel workbook)
-- **Persist** run history in MongoDB
+- **Generate** reports (CSV, Excel, PDF)
+- **Persist** run history and user data in MongoDB
 
 ## Requirements
 
-- Python 3.11 or higher
-- MongoDB (Atlas recommended)
-- pip
+- **Java 17**
+- **Maven** 3.8+
+- **Node.js** 18+
+- **MongoDB** (local or Atlas)
 
 ## Quick Start
 
-### 1. Setup
+### 1. Clone and install
 
 ```bash
-# Clone or navigate to project directory
 cd DawaiRx
 
-# Create virtual environment (recommended)
-python3.11 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-make install
-# OR: pip install -r requirements.txt
+# Install frontend dependencies
+make install-frontend
+# OR: cd frontend && npm ci
 ```
 
 ### 2. Configure MongoDB
 
-Set a MongoDB connection string (Atlas recommended):
+Set your MongoDB connection in the backend:
 
+- Edit `backend/src/main/resources/application.yml`, or
+- Set environment variable: `SPRING_DATA_MONGODB_URI=mongodb://localhost:27017/dawai_rx`  
+  (or your Atlas URI)
+
+### 3. Run the application
+
+Use two terminals:
+
+**Terminal 1 – Backend (port 8080):**
 ```bash
-export MONGO_URI="mongodb+srv://username:password@cluster.mongodb.net/DawaiRx?retryWrites=true&w=majority"
+make run-backend
+# OR: cd backend && mvn spring-boot:run
 ```
 
-If you run MongoDB locally, set `MONGO_URI` to your local connection string:
-
+**Terminal 2 – Frontend (port 5173):**
 ```bash
-export MONGO_URI="mongodb://localhost:27017/dawai_rx"
+make run-frontend
+# OR: cd frontend && npm run dev
 ```
 
-### 3. Run Tests
+Then open **http://localhost:5173** in your browser. The frontend proxies API requests to the backend in development.
 
-```bash
-make test
+### 4. Admin users
+
+Admins are stored in MongoDB. Add an admin in the `admins` collection:
+
+```javascript
+db.admins.insertOne({ "user_id": "your-admin@email.com" })
 ```
 
-### 4. Usage
-
-#### CLI Usage
-
-```bash
-# Validate input files
-python -m src.cli.main validate \
-  --ordered sample_data/ordered_sample.csv \
-  --sold sample_data/sold_sample.csv
-
-# Run full reconciliation
-python -m src.cli.main run \
-  --ordered sample_data/ordered_sample.csv \
-  --sold sample_data/sold_sample.csv \
-  --output-dir out/sample_run
-
-# List previous runs
-python -m src.cli.main runs list
-
-# Show run details
-python -m src.cli.main runs show <run_id>
-
-# Export a previous run
-python -m src.cli.main runs export <run_id>
-```
-
-#### Web UI Usage
-
-```bash
-# Start web server
-python -m src.cli.main web
-# OR: make web
-
-# Open browser to http://127.0.0.1:8000
-```
-
-The web UI provides:
-- File upload interface
-- Run reconciliation
-- View results and statistics
-- Download outputs
-- Browse previous runs
-
-## Project Structure
+## Project structure
 
 ```
 DawaiRx/
-├── src/
-│   ├── ingestion/      # File reading and column mapping
-│   ├── normalization/  # Data standardization
-│   ├── reconciliation/ # Inventory reconciliation
-│   ├── rules/          # Audit rule engine
-│   ├── reporting/      # Report generation
-│   ├── persistence/    # MongoDB operations
-│   ├── cli/            # Command-line interface
-│   └── web/            # Web UI (FastAPI)
-├── tests/              # Unit tests
-├── config/             # Configuration files
-├── sample_data/        # Sample input files
-├── out/                # Output directory (generated)
-├── requirements.txt
-├── pyproject.toml
-└── Makefile
+├── backend/          # Spring Boot API (Java 17)
+│   └── src/main/java/com/dawai/
+├── frontend/         # React SPA (Vite)
+│   └── src/
+├── scripts/          # E2E and test helpers (optional)
+├── Makefile
+└── README.md
 ```
 
-## Development
+## Makefile commands
 
-```bash
-# Format code
-make format
+| Command            | Description                          |
+|--------------------|--------------------------------------|
+| `make help`        | Show available commands              |
+| `make install-frontend` | Install frontend dependencies   |
+| `make run-backend` | Start Spring Boot (port 8080)         |
+| `make run-frontend`| Start Vite dev server (port 5173)     |
+| `make build`       | Build backend JAR + frontend dist    |
+| `make test-backend`| Run backend unit tests               |
+| `make clean`       | Remove build artifacts               |
 
-# Run linters
-make lint
+## Backend API
 
-# Run tests with coverage
-make test
+- **Health:** `GET /health`
+- **Auth:** `POST /api/auth/login`, `POST /api/auth/register`
+- **Runs:** `GET /api/runs`, `GET /api/runs/{id}`, `DELETE /api/runs/{id}`
+- **Upload & run:** `POST /api/upload`, `POST /api/run`
+- **Download:** `GET /api/download/{runId}/{fileType}` (e.g. `inventory_report`, `audit_report`, `audit_report_pdf`)
+- **Admin:** `GET /api/admin/is-admin`
 
-# Start web UI
-make web
+See `backend/README.md` for full API and configuration details.
 
-# Clean temporary files
-make clean
-```
+## Frontend
 
-## MongoDB Connection
+See `frontend/README.md` for run, build, and environment configuration.
 
-**Recommended**: MongoDB Atlas cloud connection  
-Set `MONGO_URI` with your own connection string.
+## CI
 
-**Local MongoDB**:
-```bash
-export MONGO_URI="mongodb://localhost:27017/dawai_rx"
-```
+GitHub Actions workflow `.github/workflows/java-react-ci.yml` runs on changes to `backend/` and `frontend/`:
 
-**To customize connection:**
-- Set `MONGO_URI` environment variable with your connection string
-- Or modify `src/persistence/config.py`
-
-## Deploy to Azure (Simple GitHub → App Service)
-
-This is the simplest path: push to GitHub, and Azure deploys automatically.
-
-### 1. Create the Azure Web App (Code, not Docker)
-1. Azure Portal → **Create resource** → **Web App**
-2. **Publish**: `Code`
-3. **Runtime**: `Python 3.11`
-4. **Operating system**: Linux
-5. **Plan**: your Basic B1 plan
-
-### 2. Configure App Settings
-Azure Portal → your Web App → **Configuration** → **Application settings**
-Add:
-- `MONGO_URI` = your MongoDB connection string
-- `SECRET_KEY` = any strong random string
-- `PORT` = `8000`
-
-Then **Save** (this restarts the app).
-
-### 3. Set Startup Command
-Azure Portal → your Web App → **Configuration** → **General settings**
-Set **Startup Command**:
-```
-python -m src.cli.main web --host 0.0.0.0 --port 8000
-```
-
-### 4. Add GitHub Actions Deployment
-1. In Azure Portal → **Deployment Center**
-2. Choose **GitHub** and connect your repo
-3. Azure will create a workflow in `.github/workflows/`
-
-Or use the included workflow below (see `DEPLOYMENT-AZURE-GITHUB.md`).
-
-### 5. Push to GitHub
-Any push to `main` deploys automatically.
-
-## Status
-
-- ✅ Phase 0: Repository bootstrap
-- ✅ Phase 1: Ingestion + schema mapping
-- ✅ Phase 2: Normalization layer
-- ✅ Phase 3: Reconciliation engine
-- ✅ Phase 4: Rules engine + issues output
-- ✅ Phase 5: MongoDB persistence + run history
-- ✅ Phase 6: Minimal local UI
+- Builds the backend with Maven
+- Installs and builds the frontend with npm
 
 ## License
 

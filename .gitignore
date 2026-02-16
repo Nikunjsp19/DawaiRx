@@ -1,34 +1,7 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-*.pyd
-
-# Virtual environments
-venv/
-ENV/
-env/
-.venv/
+# Build artifacts
+backend/target/
+frontend/dist/
+frontend/node_modules/
 
 # IDE
 .vscode/
@@ -41,46 +14,23 @@ env/
 .DS_Store
 Thumbs.db
 
-# Project specific
+# Project
 *.log
-web_server.log
 uploads/
 out/
 *.csv
 *.xlsx
 *.xls
-!sample_data/*.csv
-!sample_data/*.xlsx
 
-# Test files
-test_*.csv
-test_*.log
-generated_report.csv
-*_output.csv
-
-# Environment variables
+# Environment
 .env
 .env.local
 
-# MongoDB
-*.db
-*.sqlite
-
-# Temporary files
+# Temp
 tmp/
 temp/
 *.tmp
-
-# Screenshots and test files
-stitch_run_progress_status*/
-*.png
-*.jpg
-*.jpeg
-!sample_data/*.png
-
-# Process IDs
 *.pid
-web_server.pid
 
-# GitHub secrets (contains sensitive credentials)
+# Secrets
 .github/SETUP-AZURE-SECRETS.md

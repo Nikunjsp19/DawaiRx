@@ -1,3 +1,4 @@
+// In production this should point to Azure App Service (set via VITE_API_URL).
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
 function getAuthHeaders() {

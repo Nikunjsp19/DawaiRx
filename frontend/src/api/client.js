@@ -1,4 +1,4 @@
-// In production this should point to Azure App Service (set via VITE_API_URL).
+// In production this must be the full backend URL (https://...azurewebsites.net), set via VITE_API_URL at build time.
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
 function getAuthHeaders() {

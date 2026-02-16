@@ -7,6 +7,7 @@ import { Button, Input, Label, Textarea, StatusBanner } from '../components/ui'
 const VIEWS = { login: 'login', request: 'request', check: 'check', register: 'register' }
 
 export default function Login() {
+  // Keep login interactions fast because this is the primary first-load route.
   const navigate = useNavigate()
   const { login: setAuth } = useAuth()
 

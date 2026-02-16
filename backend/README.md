@@ -15,10 +15,14 @@ Pharmacy Audit & Reconciliation - Java/Spring Boot backend.
 In `application.yml`:
 - `spring.data.mongodb.uri` - e.g. `mongodb://localhost:27017/dawai_rx` or your Atlas URI
 - `spring.data.mongodb.database` - e.g. `dawai_rx` or `DawaiRx` (case-sensitive!)
-- `JWT_SECRET_KEY` - Secret for JWT tokens (required in production)
-- `UPLOAD_DIR` - Directory for uploads (default: `/tmp/dawai-rx/uploads`)
-- `OUTPUT_DIR` - Directory for report outputs (default: `/tmp/dawai-rx/output`)
-- `CORS_ORIGINS` - Allowed CORS origins (default: `http://localhost:5173,http://localhost:3000`)
+
+Environment variable equivalents:
+- `SPRING_DATA_MONGODB_URI`
+- `SPRING_DATA_MONGODB_DATABASE`
+- `JWT_SECRET` - Secret for JWT tokens (required in production)
+- `APP_UPLOAD_DIR` - Directory for uploads (default: `/tmp/dawai-rx/uploads`)
+- `APP_OUTPUT_DIR` - Directory for report outputs
+- `CORS_ALLOWED_ORIGINS` - Allowed CORS origins (default: `http://localhost:5173,http://localhost:3000`)
 
 ## Run
 

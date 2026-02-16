@@ -111,6 +111,31 @@ GitHub Actions workflow `.github/workflows/java-react-ci.yml` runs on changes to
 - Builds the backend with Maven
 - Installs and builds the frontend with npm
 
+## Azure Deployment (GitHub Actions)
+
+This repo now has separate deployment workflows:
+
+- Frontend (Azure Static Web Apps): `.github/workflows/azure-static-web-apps-happy-sky-0bcb5e90f.yml`
+- Backend (Azure App Service): `.github/workflows/backend-azure-appservice-deploy.yml`
+
+Required GitHub configuration:
+
+- Repository `Variables`:
+  - `VITE_API_URL` = your backend URL (example: `https://DawaiRxApp.azurewebsites.net`)
+  - `AZURE_BACKEND_APP_NAME` = your backend App Service name (example: `DawaiRxApp`)
+- Repository `Secrets`:
+  - `AZURE_STATIC_WEB_APPS_API_TOKEN_HAPPY_SKY_0BCB5E90F` (already auto-created by Azure SWA)
+  - `AZURE_CLIENT_ID`
+  - `AZURE_TENANT_ID`
+  - `AZURE_SUBSCRIPTION_ID`
+
+Backend App Service application settings in Azure:
+
+- `SPRING_DATA_MONGODB_URI`
+- `SPRING_DATA_MONGODB_DATABASE`
+- `JWT_SECRET`
+- `CORS_ALLOWED_ORIGINS` = your frontend URL (example: `https://happy-sky-0bcb5e90f.4.azurestaticapps.net`)
+
 ## License
 
 MIT

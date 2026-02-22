@@ -81,6 +81,7 @@ export default function Login() {
   const switchView = (v) => { clear(); setCheckResult(null); setView(v) }
 
   /* ── shared sub-components ─────────────────────────── */
+  // Keep alert rendering simple to avoid extra work during auth transitions.
   const Alerts = () => (
     <>
       {error && <StatusBanner type="error" className="mb-4">{error}</StatusBanner>}

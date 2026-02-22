@@ -19,9 +19,13 @@ server:
 # File storage
 # output-dir: when running from backend/, ${user.dir}/../out/web_runs = project out/web_runs (same as Python).
 app:
-  upload-dir: /tmp/dawai-rx/uploads
-  output-dir: ${user.dir}/../out/web_runs
-  fallback-output-dir: out/web_runs
+  # Azure-safe overrides (set in App Service app settings):
+  # APP_UPLOAD_DIR=/home/site/data/dawai-rx/uploads
+  # APP_OUTPUT_DIR=/home/site/data/dawai-rx/output
+  # APP_FALLBACK_OUTPUT_DIR=/home/site/data/dawai-rx/output
+  upload-dir: ${APP_UPLOAD_DIR:/tmp/dawai-rx/uploads}
+  output-dir: ${APP_OUTPUT_DIR:${user.dir}/../out/web_runs}
+  fallback-output-dir: ${APP_FALLBACK_OUTPUT_DIR:${app.output-dir}}
 
 # JWT - secret must be at least 256 bits (32 chars) for HS256
 jwt:

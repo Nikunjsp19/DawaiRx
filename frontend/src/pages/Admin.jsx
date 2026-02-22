@@ -145,27 +145,24 @@ export default function Admin() {
 
   return (
     <Layout>
-      <PageHeader title="Admin Panel" description="Manage users and registration requests" />
+      {/* Sticky header: title + tabs stay visible when scrolling (e.g. Requests with "All" filter) */}
+      <div className="sticky top-0 z-10 -mx-1 -mt-1 px-1 pt-1 pb-0 bg-[var(--color-bg)] border-b-0 mb-0 overflow-visible">
+        <PageHeader title="Admin Panel" description="Manage users and registration requests" />
 
-      {/* Tabs */}
-      <div className="flex border-b border-[var(--color-border)] mb-6 -mx-1 overflow-x-auto">
-        {SECTIONS.map(s => (
-          <button key={s.id} type="button" role="tab" aria-selected={section === s.id}
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-default whitespace-nowrap ${
-              section === s.id ? 'border-[var(--color-ring)] text-[var(--color-ring)]' : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-gray-50 dark:hover:bg-gray-800'
-            }`}
-            onClick={() => setSection(s.id)}>
-            <span className="material-symbols-outlined text-lg">{s.icon}</span>{s.label}
-          </button>
-        ))}
-      </div>
-
-      {statusMsg && <StatusBanner type={statusMsg.type === 'success' ? 'success' : 'error'} className="mb-4">{statusMsg.text}</StatusBanner>}
-
-      {/* ── Requests ──────────────────────────────────── */}
-      {section === SECTION_REQUESTS && (
-        <>
-          <div className="mb-4 flex flex-wrap gap-2">
+        {/* Tabs */}
+        <div className={`flex border-b border-[var(--color-border)] -mx-1 overflow-x-auto ${section === SECTION_REQUESTS ? '' : 'mb-6'}`}>
+          {SECTIONS.map(s => (
+            <button key={s.id} type="button" role="tab" aria-selected={section === s.id}
+              className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-default whitespace-nowrap ${
+                section === s.id ? 'border-[var(--color-ring)] text-[var(--color-ring)]' : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+              onClick={() => setSection(s.id)}>
+              <span className="material-symbols-outlined text-lg">{s.icon}</span>{s.label}
+            </button>
+          ))}
+        </div>
+        {section === SECTION_REQUESTS && (
+          <div className="pt-3 pb-3 mb-2 flex flex-wrap gap-2">
             {FILTERS.map(f => (
               <button key={f} type="button" onClick={() => { setFilter(f); setReqPage(1) }}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-default ${
@@ -175,6 +172,14 @@ export default function Admin() {
               </button>
             ))}
           </div>
+        )}
+      </div>
+
+      {statusMsg && <StatusBanner type={statusMsg.type === 'success' ? 'success' : 'error'} className="mb-4">{statusMsg.text}</StatusBanner>}
+
+      {/* ── Requests ──────────────────────────────────── */}
+      {section === SECTION_REQUESTS && (
+        <>
           {loading ? <div className="py-12 text-center"><Spinner size="lg" className="mx-auto mb-3" /><p className="text-sm text-[var(--color-text-muted)]">Loading requests...</p></div>
            : requests.length === 0 ? <EmptyState icon="inbox" title="No requests found" />
            : (

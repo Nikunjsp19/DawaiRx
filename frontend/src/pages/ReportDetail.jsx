@@ -192,11 +192,11 @@ export default function ReportDetail() {
 
   return (
     <Layout fullWidth>
-      <div className="flex flex-col flex-1 min-h-0 -mx-4 sm:-mx-5 lg:-mx-6 -mt-3 lg:-mt-4 -mb-3 lg:-mb-4">
+      <div className="flex flex-col flex-1 min-h-0 -mb-3 lg:-mb-4">
 
         {/* ── Header bar ──────────────────────────────── */}
-        <div className="shrink-0 px-3 sm:px-4 lg:px-5 pt-2 pb-1.5">
-          <Link to="/" className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-ring)] hover:underline mb-1">
+        <div className="shrink-0 px-3 sm:px-4 lg:px-5 pt-4 pb-1.5">
+          <Link to="/" className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-ring)] hover:underline mb-1 align-middle leading-normal">
             <span className="material-symbols-outlined text-sm">arrow_back</span>Back to Dashboard
           </Link>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">

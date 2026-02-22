@@ -127,7 +127,7 @@ export default function Login() {
                 <div><Label htmlFor="userId">User ID</Label><Input id="userId" icon="person" value={loginUserId} onChange={(e) => { setLoginUserId(e.target.value); clear() }} placeholder="Enter your user ID" autoComplete="username" required /></div>
                 <div><Label htmlFor="password">Password</Label><Input id="password" icon="lock" type="password" value={loginPassword} onChange={(e) => { setLoginPassword(e.target.value); clear() }} placeholder="Enter your password" autoComplete="current-password" required /></div>
                 <Button type="submit" disabled={loading} size="lg" className="w-full">
-                  <span className="material-symbols-outlined text-lg">{loading ? 'sync' : 'login'}</span>
+                  <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}>{loading ? 'sync' : 'login'}</span>
                   {loading ? 'Signing in...' : 'Sign In'}
                 </Button>
               </form>
@@ -155,7 +155,7 @@ export default function Login() {
                 <div><Label htmlFor="reqCompany">Company / Organization</Label><Input id="reqCompany" icon="business" value={requestCompany} onChange={(e) => { setRequestCompany(e.target.value); clear() }} placeholder="Enter company name" /></div>
                 <div><Label htmlFor="reqReason">Reason for Access</Label><Textarea id="reqReason" rows={3} value={requestReason} onChange={(e) => { setRequestReason(e.target.value); clear() }} placeholder="Tell us why you need access" /></div>
                 <Button type="submit" disabled={loading} size="lg" className="w-full">
-                  <span className="material-symbols-outlined text-lg">{loading ? 'sync' : 'send'}</span>
+                  <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}>{loading ? 'sync' : 'send'}</span>
                   {loading ? 'Submitting...' : 'Submit Request'}
                 </Button>
               </form>
@@ -177,7 +177,7 @@ export default function Login() {
               <form onSubmit={handleCheckStatus} className="space-y-4">
                 <div><Label htmlFor="checkUserId">User ID</Label><Input id="checkUserId" icon="person" value={checkUserId} onChange={(e) => { setCheckUserId(e.target.value); clear(); setCheckResult(null) }} placeholder="Enter your requested user ID" required /></div>
                 <Button type="submit" disabled={loading} size="lg" className="w-full">
-                  <span className="material-symbols-outlined text-lg">{loading ? 'sync' : 'search'}</span>
+                  <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}>{loading ? 'sync' : 'search'}</span>
                   {loading ? 'Checking...' : 'Check Status'}
                 </Button>
               </form>
@@ -207,7 +207,7 @@ export default function Login() {
                 <div><Label htmlFor="regEmail">Email</Label><Input id="regEmail" icon="email" type="email" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} placeholder="Enter your email" /></div>
                 <div><Label htmlFor="regPassword">Password</Label><Input id="regPassword" icon="lock" type="password" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} placeholder="Min 6 characters" required minLength={6} /></div>
                 <Button type="submit" disabled={loading} size="lg" className="w-full">
-                  <span className="material-symbols-outlined text-lg">{loading ? 'sync' : 'person_add'}</span>
+                  <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}>{loading ? 'sync' : 'person_add'}</span>
                   {loading ? 'Creating...' : 'Complete Registration'}
                 </Button>
               </form>

@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { isAdmin } from '../api/client'
 
+const SIDEBAR_COLLAPSED_KEY = 'dawairx-sidebar-collapsed'
+
 const NAV_ITEMS = [
   { path: '/',           icon: 'dashboard',             label: 'Dashboard' },
   { path: '/new-report', icon: 'note_add',              label: 'New Report' },
@@ -17,14 +19,22 @@ export default function Layout({ children, fullWidth = false }) {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showAdminLink, setShowAdminLink] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) ?? 'false') } catch { return false }
+  })
 
   useEffect(() => {
     if (!token) { setShowAdminLink(false); return }
     isAdmin().then((d) => setShowAdminLink(Boolean(d?.is_admin))).catch(() => setShowAdminLink(false))
   }, [token])
 
+  useEffect(() => {
+    try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, JSON.stringify(sidebarCollapsed)) } catch {}
+  }, [sidebarCollapsed])
+
   const closeSidebar = () => setSidebarOpen(false)
   const handleLogout = () => { logout(); navigate('/login') }
+  const toggleSidebarCollapse = () => setSidebarCollapsed((c) => !c)
 
   const navClass = (path) => {
     const active = location.pathname === path || (path !== '/' && location.pathname.startsWith(path))
@@ -40,51 +50,66 @@ export default function Layout({ children, fullWidth = false }) {
     <div className="h-screen flex overflow-hidden bg-[var(--color-bg)] text-[var(--color-text)] font-display">
       {/* ── Sidebar ────────────────────────────────────────── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-56 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col transform transition-transform duration-200 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col transition-[transform,width] duration-200 ease-out ${
+          sidebarOpen ? 'translate-x-0 w-56' : '-translate-x-full lg:translate-x-0'
+        } ${sidebarCollapsed ? 'lg:w-16' : 'w-56 lg:w-56'}`}
       >
         {/* Brand */}
-        <div className="flex items-center gap-3 px-4 h-14 border-b border-[var(--color-border)] shrink-0">
-          <div className="flex items-center justify-center size-8 bg-[var(--color-ring)]/10 rounded-[var(--radius-sm)] text-[var(--color-ring)]">
+        <div className={`flex items-center h-14 border-b border-[var(--color-border)] shrink-0 transition-all duration-200 ${sidebarCollapsed ? 'lg:justify-center lg:px-0' : 'gap-3 px-4'}`}>
+          <div className="flex items-center justify-center size-8 bg-[var(--color-ring)]/10 rounded-[var(--radius-sm)] text-[var(--color-ring)] shrink-0">
             <span className="material-symbols-outlined text-lg">local_pharmacy</span>
           </div>
-          <span className="text-base font-semibold tracking-tight">DawaiRx</span>
+          <span className={`text-base font-semibold tracking-tight whitespace-nowrap transition-all duration-200 overflow-hidden ${sidebarCollapsed ? 'lg:max-w-0 lg:opacity-0' : 'max-w-[10rem]'}`}>DawaiRx</span>
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden">
           {NAV_ITEMS.map((item) => (
-            <Link key={item.path} to={item.path} className={navClass(item.path)} onClick={closeSidebar}>
-              <span className="material-symbols-outlined text-lg">{item.icon}</span>
-              <span>{item.label}</span>
+            <Link key={item.path} to={item.path} className={navClass(item.path)} onClick={closeSidebar} title={item.label}>
+              <span className="material-symbols-outlined text-lg shrink-0">{item.icon}</span>
+              <span className={`whitespace-nowrap transition-all duration-200 overflow-hidden ${sidebarCollapsed ? 'lg:max-w-0 lg:opacity-0' : 'max-w-[10rem]'}`}>{item.label}</span>
             </Link>
           ))}
           {showAdminLink && (
-            <Link to="/admin" className={navClass('/admin')} onClick={closeSidebar}>
-              <span className="material-symbols-outlined text-lg">admin_panel_settings</span>
-              <span>Admin</span>
+            <Link to="/admin" className={navClass('/admin')} onClick={closeSidebar} title="Admin">
+              <span className="material-symbols-outlined text-lg shrink-0">admin_panel_settings</span>
+              <span className={`whitespace-nowrap transition-all duration-200 overflow-hidden ${sidebarCollapsed ? 'lg:max-w-0 lg:opacity-0' : 'max-w-[10rem]'}`}>Admin</span>
             </Link>
           )}
         </nav>
 
+        {/* Collapse trigger (above footer line) */}
+        <div className={`shrink-0 px-3 pb-2 transition-all duration-200 ${sidebarCollapsed ? 'lg:px-0' : ''}`}>
+          <button
+            type="button"
+            onClick={toggleSidebarCollapse}
+            className={`hidden lg:flex w-full items-center rounded-[var(--radius-md)] py-2 text-[var(--color-text-muted)] hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-[var(--color-text)] transition-default border-0 outline-none focus:ring-0 focus-visible:ring-0 ${sidebarCollapsed ? 'justify-center px-0' : 'justify-end px-3'}`}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <span className="material-symbols-outlined text-[1.25rem]">{sidebarCollapsed ? 'chevron_right' : 'chevron_left'}</span>
+          </button>
+        </div>
+
         {/* Footer actions */}
-        <div className="px-3 py-3 border-t border-[var(--color-border)] space-y-0.5 shrink-0">
+        <div className={`px-3 py-3 border-t border-[var(--color-border)] space-y-0.5 shrink-0 transition-all duration-200 ${sidebarCollapsed ? 'lg:px-0' : ''}`}>
           <button
             type="button"
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-[var(--radius-md)] text-sm text-[var(--color-text-secondary)] hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-[var(--color-text)] transition-default"
+            className={`w-full flex items-center rounded-[var(--radius-md)] text-sm text-[var(--color-text-secondary)] hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-[var(--color-text)] transition-default ${sidebarCollapsed ? 'lg:justify-center lg:px-0 py-2' : 'gap-3 px-3 py-2'}`}
+            title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
           >
-            <span className="material-symbols-outlined text-lg">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
-            <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+            <span className="material-symbols-outlined text-lg shrink-0">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
+            <span className={`whitespace-nowrap transition-all duration-200 overflow-hidden ${sidebarCollapsed ? 'lg:max-w-0 lg:opacity-0' : 'max-w-[8rem]'}`}>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
           </button>
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-[var(--radius-md)] text-sm text-[var(--color-text-secondary)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-default"
+            className={`w-full flex items-center rounded-[var(--radius-md)] text-sm text-[var(--color-text-secondary)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-default ${sidebarCollapsed ? 'lg:justify-center lg:px-0 py-2' : 'gap-3 px-3 py-2'}`}
+            title="Sign Out"
           >
-            <span className="material-symbols-outlined text-lg">logout</span>
-            <span>Sign Out</span>
+            <span className="material-symbols-outlined text-lg shrink-0">logout</span>
+            <span className={`whitespace-nowrap transition-all duration-200 overflow-hidden ${sidebarCollapsed ? 'lg:max-w-0 lg:opacity-0' : 'max-w-[8rem]'}`}>Sign Out</span>
           </button>
         </div>
       </aside>
@@ -95,7 +120,7 @@ export default function Layout({ children, fullWidth = false }) {
       )}
 
       {/* ── Main area ─────────────────────────────────────── */}
-      <div className="relative z-0 flex-1 flex flex-col lg:ml-56 min-w-0 min-h-0">
+      <div className={`relative z-0 flex-1 flex flex-col min-w-0 min-h-0 transition-[margin] duration-200 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-56'}`}>
         {/* Mobile header */}
         <header className="lg:hidden sticky top-0 z-40 h-14 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4 flex items-center justify-between shrink-0">
           <button

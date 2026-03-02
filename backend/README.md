@@ -22,6 +22,8 @@ Environment variable equivalents:
 - `JWT_SECRET` - Secret for JWT tokens (required in production)
 - `APP_UPLOAD_DIR` - Directory for uploads (default: `/tmp/dawai-rx/uploads`)
 - `APP_OUTPUT_DIR` - Directory for report outputs
+- `SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE` - Max per-file upload size (default: `50MB`)
+- `SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE` - Max total multipart request size (default: `200MB`)
 - `CORS_ALLOWED_ORIGINS` - Allowed CORS origins (default: `http://localhost:5173,http://localhost:3000`)
 
 ## Run

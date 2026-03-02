@@ -8,6 +8,49 @@ function getAuthHeaders() {
   return headers
 }
 
+function normalizeNetworkError(err) {
+  if (err?.name === 'AbortError') return err
+  if (err?.message === 'Failed to fetch' || err?.name === 'TypeError') {
+    return new Error('Cannot connect to the server. Please check your network and try again.')
+  }
+  return err
+}
+
+async function getErrorMessageFromResponse(res, fallbackMessage) {
+  let payload = null
+  try {
+    payload = await res.clone().json()
+  } catch {
+    payload = null
+  }
+
+  let detail = null
+  if (payload) {
+    detail = Array.isArray(payload.detail)
+      ? payload.detail.map((d) => d?.msg || d).join(', ')
+      : (payload.detail || payload.message)
+  } else {
+    const raw = (await res.text().catch(() => '')).trim()
+    if (raw && !raw.startsWith('<')) detail = raw
+  }
+
+  if (typeof detail === 'string' && detail.trim()) return detail.trim()
+
+  if (res.status === 401 || res.status === 403) {
+    return 'Session expired. Please sign in again.'
+  }
+  if (res.status === 413) {
+    return 'Uploaded files are too large. Please reduce file size and try again.'
+  }
+  if (res.status === 408 || res.status === 504) {
+    return 'Upload timed out on the server. Please retry with smaller files.'
+  }
+  if (res.status === 502 || res.status === 503) {
+    return 'Server is temporarily unavailable. Please retry in a minute.'
+  }
+  return `${fallbackMessage} (HTTP ${res.status})`
+}
+
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`
   let res
@@ -89,14 +132,18 @@ export async function importReportCsv(file) {
   const form = new FormData()
   form.append('file', file)
   const token = localStorage.getItem('auth_token')
-  const res = await fetch(`${API_BASE}/api/upload`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: form,
-  })
+  let res
+  try {
+    res = await fetch(`${API_BASE}/api/upload`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    })
+  } catch (err) {
+    throw normalizeNetworkError(err)
+  }
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.detail || err.message || 'Import failed')
+    throw new Error(await getErrorMessageFromResponse(res, 'Import failed'))
   }
   return res.json()
 }
@@ -115,37 +162,44 @@ export async function uploadReportFiles(orderedFiles, soldFile, mappingFile = nu
   if (dateTo) form.append('date_to', dateTo)
   if (reportName) form.append('report_name', reportName)
   const token = localStorage.getItem('auth_token')
-  const res = await fetch(`${API_BASE}/api/upload`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: form,
-    signal: signal ?? undefined,
-  })
+  let res
+  try {
+    res = await fetch(`${API_BASE}/api/upload`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+      signal: signal ?? undefined,
+    })
+  } catch (err) {
+    throw normalizeNetworkError(err)
+  }
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    const detail = Array.isArray(err.detail) ? err.detail.map((d) => d.msg || d).join(', ') : (err.detail || err.message)
-    throw new Error(detail || 'Upload failed')
+    throw new Error(await getErrorMessageFromResponse(res, 'Upload failed'))
   }
   return res.json()
 }
 
 /** Run reconciliation after upload. Uses session_id from uploadReportFiles. Returns { success, run_id, ... }. */
-export async function runReport(sessionId, dateFrom, dateTo, reportName) {
+export async function runReport(sessionId, dateFrom, dateTo, reportName, signal = null) {
   const form = new FormData()
   form.append('session_id', sessionId)
   if (dateFrom) form.append('date_from', dateFrom)
   if (dateTo) form.append('date_to', dateTo)
   if (reportName) form.append('report_name', reportName)
   const token = localStorage.getItem('auth_token')
-  const res = await fetch(`${API_BASE}/api/run`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: form,
-  })
+  let res
+  try {
+    res = await fetch(`${API_BASE}/api/run`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+      signal: signal ?? undefined,
+    })
+  } catch (err) {
+    throw normalizeNetworkError(err)
+  }
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    const detail = Array.isArray(err.detail) ? err.detail.map((d) => d.msg || d).join(', ') : (err.detail || err.message)
-    throw new Error(detail || 'Reconciliation failed')
+    throw new Error(await getErrorMessageFromResponse(res, 'Reconciliation failed'))
   }
   return res.json()
 }

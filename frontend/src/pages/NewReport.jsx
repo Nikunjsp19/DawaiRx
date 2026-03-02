@@ -63,6 +63,8 @@ export default function NewReport() {
   const [progress, setProgress] = useState({ percent: 0, text: '', stage: 'idle' })
   const progressStartRef = useRef(null)
   const abortRef = useRef(null)
+  const timeoutRef = useRef(null)
+  const timedOutRef = useRef(false)
 
   const canMoveStep1 = isDateRangeValid(dateFrom, dateTo)
   const canMoveStep2 = Boolean((reportName || makeDefaultReportName(dateFrom, dateTo)).trim())
@@ -78,6 +80,11 @@ export default function NewReport() {
   }, [])
 
   const handleCancel = useCallback(() => {
+    timedOutRef.current = false
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
     if (abortRef.current) abortRef.current.abort()
     setLoading(false)
     setProgress({ percent: 0, text: '', stage: 'idle' })
@@ -87,12 +94,25 @@ export default function NewReport() {
     if (!canGenerate || loading) return
     setError(''); setLoading(true)
     progressStartRef.current = Date.now()
+    timedOutRef.current = false
     abortRef.current = new AbortController()
+    timeoutRef.current = setTimeout(() => {
+      timedOutRef.current = true
+      abortRef.current?.abort()
+    }, UPLOAD_TIMEOUT_MS)
 
     try {
       updateProgress(10, 'Uploading and validating files...', 'uploading')
 
-      const uploadResult = await uploadReportFiles(orderedFiles, soldFile, null, dateFrom, dateTo, computedName)
+      const uploadResult = await uploadReportFiles(
+        orderedFiles,
+        soldFile,
+        null,
+        dateFrom,
+        dateTo,
+        computedName,
+        abortRef.current.signal
+      )
 
       updateProgress(30, 'Processing batch 1 of 3...', 'validating')
 
@@ -103,7 +123,7 @@ export default function NewReport() {
 
         updateProgress(50, 'Processing batch 2 of 3...', 'validating')
 
-        const runResult = await runReport(sessionId, dateFrom, dateTo, computedName)
+        const runResult = await runReport(sessionId, dateFrom, dateTo, computedName, abortRef.current.signal)
         runId = runResult?.run_id || runResult?.runId
       }
 
@@ -117,12 +137,24 @@ export default function NewReport() {
       setToast({ type: 'success', message: 'Report generated successfully' })
       navigate(`/runs/${encodeURIComponent(runId)}`)
     } catch (err) {
-      if (err?.name === 'AbortError') return
+      if (err?.name === 'AbortError') {
+        if (timedOutRef.current) {
+          const timeoutMsg = 'Report generation timed out. Please retry with smaller files.'
+          updateProgress(0, timeoutMsg, 'error')
+          setError(timeoutMsg)
+          setToast({ type: 'error', message: timeoutMsg })
+        }
+        return
+      }
       const msg = err?.message || 'Failed to generate report'
       updateProgress(0, msg, 'error')
       setError(msg)
       setToast({ type: 'error', message: msg })
     } finally {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
       setLoading(false)
     }
   }

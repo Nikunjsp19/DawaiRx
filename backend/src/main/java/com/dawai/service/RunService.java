@@ -118,42 +118,47 @@ public class RunService {
         Files.createDirectories(runUploadDir);
         Files.createDirectories(runOutputDir);
 
-        // Save uploaded files to disk
-        List<Path> orderedPaths = new ArrayList<>();
-        if (orderedFiles != null) {
-            for (int i = 0; i < orderedFiles.length; i++) {
-                MultipartFile f = orderedFiles[i];
-                if (f != null && !f.isEmpty()) {
-                    String name = "ordered_" + i + "_" + sanitizeFilename(f.getOriginalFilename());
-                    Path dest = runUploadDir.resolve(name);
-                    f.transferTo(dest.toFile());
-                    orderedPaths.add(dest);
+        try {
+            // Save uploaded files to disk
+            List<Path> orderedPaths = new ArrayList<>();
+            if (orderedFiles != null) {
+                for (int i = 0; i < orderedFiles.length; i++) {
+                    MultipartFile f = orderedFiles[i];
+                    if (f != null && !f.isEmpty()) {
+                        String name = "ordered_" + i + "_" + sanitizeFilename(f.getOriginalFilename());
+                        Path dest = runUploadDir.resolve(name);
+                        f.transferTo(dest.toFile());
+                        orderedPaths.add(dest);
+                    }
                 }
             }
-        }
-        Path soldPath = null;
-        if (soldFile != null && !soldFile.isEmpty()) {
-            soldPath = runUploadDir.resolve("sold_" + sanitizeFilename(soldFile.getOriginalFilename()));
-            soldFile.transferTo(soldPath.toFile());
-        }
-        if (mappingFile != null && !mappingFile.isEmpty()) {
-            Path mp = runUploadDir.resolve("mapping_" + sanitizeFilename(mappingFile.getOriginalFilename()));
-            mappingFile.transferTo(mp.toFile());
-        }
+            Path soldPath = null;
+            if (soldFile != null && !soldFile.isEmpty()) {
+                soldPath = runUploadDir.resolve("sold_" + sanitizeFilename(soldFile.getOriginalFilename()));
+                soldFile.transferTo(soldPath.toFile());
+            }
+            if (mappingFile != null && !mappingFile.isEmpty()) {
+                Path mp = runUploadDir.resolve("mapping_" + sanitizeFilename(mappingFile.getOriginalFilename()));
+                mappingFile.transferTo(mp.toFile());
+            }
 
-        // ---- Run the full pipeline ----
-        PipelineResult result = runPipeline(runId, orderedPaths, soldPath, runOutputDir, dateFrom, dateTo, reportName, userId);
+            // ---- Run the full pipeline ----
+            PipelineResult result = runPipeline(runId, orderedPaths, soldPath, runOutputDir, dateFrom, dateTo, reportName, userId);
 
-        // ---- Persist to MongoDB ----
-        persistRun(runId, userId, orderedPaths, soldPath, result, dateFrom, dateTo, reportName);
+            // ---- Persist to MongoDB ----
+            persistRun(runId, userId, orderedPaths, soldPath, result, dateFrom, dateTo, reportName);
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("run_id", runId);
-        response.put("dawairx_report", result.dawairxReport);
-        response.put("dawairx_columns", result.dawairxColumns);
-        response.put("dawairx_row_count", result.dawairxReport.size());
-        response.put("summary", result.summary);
-        return response;
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("run_id", runId);
+            response.put("dawairx_report", result.dawairxReport);
+            response.put("dawairx_columns", result.dawairxColumns);
+            response.put("dawairx_row_count", result.dawairxReport.size());
+            response.put("summary", result.summary);
+            return response;
+        } finally {
+            // Keep generated outputs but clear transient upload copies to reduce cloud disk pressure.
+            deleteDirectoryQuietly(runUploadDir);
+        }
     }
 
     /** Legacy upload method for UploadController backward-compat. */
@@ -494,9 +499,10 @@ public class RunService {
     // ====================== HELPERS ======================
 
     private String generateRunId() {
-        // Match Python: YYYYMMDD_HHMMSS_mmm
+        // Prefix matches Python timestamp style; random suffix prevents collisions under concurrency.
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        return now.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS"));
+        String stamp = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS"));
+        return stamp + "_" + UUID.randomUUID().toString().substring(0, 8);
     }
 
     private static String sanitizeFilename(String name) {
@@ -565,6 +571,21 @@ public class RunService {
             return LocalDate.parse(s.trim());
         } catch (DateTimeParseException e) {
             return null;
+        }
+    }
+
+    private void deleteDirectoryQuietly(Path path) {
+        if (path == null || !Files.exists(path)) return;
+        try (Stream<Path> walk = Files.walk(path)) {
+            walk.sorted(Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.deleteIfExists(p);
+                } catch (IOException e) {
+                    log.warn("Failed cleaning temporary upload file {}: {}", p, e.getMessage());
+                }
+            });
+        } catch (IOException e) {
+            log.warn("Failed cleaning temporary upload directory {}: {}", path, e.getMessage());
         }
     }
 

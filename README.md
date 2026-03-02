@@ -135,6 +135,8 @@ Backend App Service application settings in Azure:
 - `SPRING_DATA_MONGODB_DATABASE`
 - `JWT_SECRET`
 - `CORS_ALLOWED_ORIGINS` = your frontend URL (example: `https://happy-sky-0bcb5e90f.4.azurestaticapps.net`)
+- `SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE` = e.g. `50MB`
+- `SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE` = e.g. `200MB`
 
 ## License
 
